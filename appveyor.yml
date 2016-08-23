@@ -1,0 +1,17 @@
+version: 1.0.{build}
+build:
+  verbosity: minimal
+test: off
+deploy:
+- provider: NuGet
+  api_key:
+    secure: gPpssATrDRZaa6fHJn0irm9K1T4LWPuvlDrD23bN1Mbu9VA6TIogGJfoFDN/pxOD
+  skip_symbols: true
+notifications:
+- provider: Email
+  to:
+  - stiven@outlook.com
+  subject: TITcs.SharePont Build
+  on_build_success: false
+  on_build_failure: true
+  on_build_status_changed: true
