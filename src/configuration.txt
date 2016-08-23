@@ -1,0 +1,20 @@
+
+
+Adding in the web.config located in C:\inetpub\wwwroot\wss\VirtualDirectories\[SHAREPOINT_SITE]:
+
+  <configSections>
+    <sectionGroup name="sharePointServices">
+      <section name="service" type="TITcs.SharePoint.SOM.Services.SharePointServiceSection"/>
+    </sectionGroup>
+  </configSections>
+  <sharePointServices>
+    <service assemblyName="[NAME_ASSEMBLY_SHAREPOINT_PROJECT]" />
+  </sharePointServices>
+  <appSettings>
+    <add key="CacheDurationInMinutes" value="10"/>
+  </appSettings>
+  <system.webServer>
+    <handlers>
+      <add name="HandlerFactory" verb="*" path="*.sps" type="TITcs.SharePoint.SOM.Services.HandlerFactory"/>
+    </handlers>
+  </system.webServer>

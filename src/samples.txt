@@ -1,0 +1,67 @@
+
+
+  Creating a service:
+
+  public class MyService : ServiceBase {
+  
+	[Route]
+	public object GetAll() {
+	
+		//TODO
+	
+	}
+  }
+
+  Call Service:
+
+  $.ajax({
+	url: '/services/myservice.sps/getall'
+  });
+
+  Creating a Model
+
+    public class MyItem : SharePointItem
+    {
+        [JsonProperty("field")]
+        [SharePointField("Field")]
+        public string Field { get; set; }
+
+	}
+
+  Creating a Repository
+
+	public class MyRepository : SharePointRepository<MyItem>
+	{
+		public MyRepository(SPWeb rootWeb)
+			: base(rootWeb)
+		{
+		}
+
+		public MyItem GetByTitle(string title)
+		{
+			var query = string.Format(@"<Where>
+								<Eq>
+									<FieldRef Name='Title' />
+									<Value Type='Text'>{0}</Value>
+								</Eq>
+							</Where>", title);
+
+			var result = GetAll(query).SingleOrDefault();
+
+			return result;
+		}
+	}
+
+  Call a Repository
+
+	using (SPSite site = new SPSite("http://sharepoint.site"))
+	{
+		using (SPWeb web = site.OpenWeb())
+		{
+			var myRepository = new MyRepository(web);
+                    
+			var item = myRepository.GetById(1);
+
+			Assert.IsTrue(item.Id > 1);
+		}
+	}
