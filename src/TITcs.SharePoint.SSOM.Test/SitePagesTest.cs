@@ -21,12 +21,6 @@ namespace TITcs.SharePoint.SOM.Test
 
                     var item = sitePages.GetAll();
 
-                    //var item1 = sitePages.GetAll();
-
-                    //sitePages.LastPosition = null;
-
-                    //var item2 = sitePages.GetAll();
-
                     Assert.IsTrue(item.Count > 0);
                 }
             }
