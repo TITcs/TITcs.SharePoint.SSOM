@@ -2,6 +2,9 @@ version: 1.0.{build}
 
 configuration: Release
 
+before_build:
+  - nuget restore src/titcs.sharepoint.ssom.sln
+
 after_build:
   - ps: >-
       . .\build.ps1 Pack-Nuget
