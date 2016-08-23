@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>TITcs.SharePoint.SSOM</id>
-        <version>0.0.0.1</version>
+        <version>0.0.0</version>
         <title>TITcs.SharePoint.SSOM</title>
         <authors>Stiven</authors>
         <owners>TITcs</owners>
