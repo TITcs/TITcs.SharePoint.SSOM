@@ -1,28 +1,32 @@
 version: 1.0.{build}
+
 configuration: Release
-platform: Any CPU
-before_build:
-- cmd: nuget restore src/titcs.sharepoint.ssom.sln
+
 after_build:
   - ps: >-
       . .\build.ps1 Pack-Nuget
-build:
-  publish_nuget: true
-  publish_nuget_symbols: true
-  include_nuget_references: true
-  verbosity: normal
-test: off
+      
+test: off      
+      
+artifacts:
+  - path: src\nuget\titcs.sharepoint
+    name: src
+
 deploy:
 - provider: NuGet
+  server: https://www.nuget.org
   api_key:
     secure: gPpssATrDRZaa6fHJn0irm9K1T4LWPuvlDrD23bN1Mbu9VA6TIogGJfoFDN/pxOD
-  skip_symbols: true
+  skip_symbols: false
+  artifact: /.*\.nupkg/
+  on:
+    branch: master
+    
 notifications:
 - provider: Email
   to:
   - stiven@outlook.com
-  subject: TITcs.SharePont.SSOM Build
+  subject: TITcs.SharePoint Build
   on_build_success: false
-  on_build_failure: false
-  on_build_status_changed: false
-  
+  on_build_failure: true
+  on_build_status_changed: true
