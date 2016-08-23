@@ -1,24 +1,32 @@
 version: 1.0.{build}
-build:
-  verbosity: minimal
-test: off
+
+configuration: Release
+
+after_build:
+  - ps: >-
+      . .\build.ps1 Pack-Nuget
+      
+test: off      
+      
 artifacts:
   - path: src\nuget\titcs.sharepoint.ssom
     name: src
+
 deploy:
 - provider: NuGet
   server: https://www.nuget.org
   api_key:
     secure: gPpssATrDRZaa6fHJn0irm9K1T4LWPuvlDrD23bN1Mbu9VA6TIogGJfoFDN/pxOD
   skip_symbols: false
-artifact: /.*\.nupkg/
+  artifact: /.*\.nupkg/
   on:
     branch: master
+    
 notifications:
 - provider: Email
   to:
   - stiven@outlook.com
-  subject: TITcs.SharePont.SSOM Build
+  subject: TITcs.SharePoint.SSOM Build
   on_build_success: false
-  on_build_failure: false
-  on_build_status_changed: false
+  on_build_failure: true
+  on_build_status_changed: true
