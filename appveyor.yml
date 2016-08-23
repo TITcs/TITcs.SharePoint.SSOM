@@ -2,6 +2,10 @@ version: 1.0.{build}
 
 configuration: Release
 
+build:
+  publish_nuget: true
+  verbosity: normal
+  
 after_build:
   - ps: >-
       . .\build.ps1 Pack-Nuget
