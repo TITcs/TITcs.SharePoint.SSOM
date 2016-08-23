@@ -14,5 +14,5 @@ $xml.Save($nuspecPath)
 [xml]$xml = cat $nuspecPath
 $nupkgPath = $nupkgPath -f $xml.package.metadata.version
 
-nuget pack $nuspecPath -OutputDirectory $srcDir 
+nuget pack $nuspecPath -properties "Configuration=$env:configuration;Platform=AnyCPU;"-OutputDirectory $srcDir 
 appveyor PushArtifact $nupkgPath
