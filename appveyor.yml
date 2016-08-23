@@ -5,13 +5,13 @@ configuration: Release
 before_build:
   - nuget restore
   
-build:
-  publish_nuget: true
-  verbosity: normal
-  
 after_build:
   - ps: >-
       . .\build.ps1 Pack-Nuget
+  
+build:
+  publish_nuget: true
+  verbosity: normal
       
 test: off      
       
