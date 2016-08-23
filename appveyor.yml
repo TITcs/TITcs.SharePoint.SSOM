@@ -6,6 +6,9 @@ build:
   publish_nuget: true
   verbosity: normal
   
+before_build:
+  - nuget restore
+  
 after_build:
   - ps: >-
       . .\build.ps1 Pack-Nuget
