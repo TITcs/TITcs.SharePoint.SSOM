@@ -3,7 +3,7 @@ build:
   verbosity: minimal
 test: off
 artifacts:
-  - path: src\nuget\titcs.sharepoint
+  - path: src\nuget\titcs.sharepoint.ssom
     name: src
 deploy:
 - provider: NuGet
