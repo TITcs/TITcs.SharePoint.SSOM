@@ -2,11 +2,18 @@ version: 1.0.{build}
 build:
   verbosity: minimal
 test: off
+artifacts:
+  - path: src\nuget\titcs.sharepoint
+    name: src
 deploy:
 - provider: NuGet
+  server: https://www.nuget.org
   api_key:
     secure: gPpssATrDRZaa6fHJn0irm9K1T4LWPuvlDrD23bN1Mbu9VA6TIogGJfoFDN/pxOD
-  skip_symbols: true
+  skip_symbols: false
+artifact: /.*\.nupkg/
+  on:
+    branch: master
 notifications:
 - provider: Email
   to:
