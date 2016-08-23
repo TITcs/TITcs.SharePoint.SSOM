@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>TITcs.SharePoint.SSOM</id>
+        <version>0.0.0.1</version>
+        <title>TITcs.SharePoint.SSOM</title>
+        <authors>Stiven</authors>
+        <owners>TITcs</owners>
+        <licenseUrl>https://github.com/TITcs/TITcs.SharePoint.SSOM/blob/master/LICENCE</licenseUrl>
+        <projectUrl>https://github.com/TITcs/TITcs.SharePoint.SSOM/</projectUrl>
+        <iconUrl>https://github.com/TITcs/TITcs.SharePoint.SSOM/src/nuget/TITcs.SharePoint.SSOM/icon.png</iconUrl>
+        <requireLicenseAcceptance>true</requireLicenseAcceptance>
+        <description>Framework for SharePoint Server Context</description>
+        <language>pt-BR</language>
+        <tags>titcs sharepoint development context server</tags>
+        <dependencies>
+            <dependency id="Newtonsoft.Json" version="9.0.1" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="lib\net45\TITcs.SharePoint.SSOM.dll" target="lib\net45\TITcs.SharePoint.SSOM.dll" />
+    </files>
+</package>
