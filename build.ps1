@@ -6,7 +6,7 @@ $rootDir = $env:APPVEYOR_BUILD_FOLDER
  $packagesDir = "$rootDir\src\packages"
  $nuspecPath = "$rootDir\src\nuget\TITcs.SharePoint.SSOM\TITcs.SharePoint.SSOM.nuspec"
  $nugetExe = "$packagesDir\NuGet.CommandLine.2.8.5\tools\NuGet.exe"
- $nupkgPath = "$rootDir\src\NuGet\TITcs.SharePoint.SSOM\TITcs.SharePoint.{0}.nupkg"
+ $nupkgPath = "$rootDir\src\NuGet\TITcs.SharePoint.SSOM\TITcs.SharePoint.SSOM.{0}.nupkg"
 
 foreach($sln in $slns) {
    nuget restore $sln
