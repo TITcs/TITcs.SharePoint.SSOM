@@ -2,7 +2,7 @@ version: 1.0.{build}
 configuration: Release
 platform: Any CPU
 before_build:
-- cmd: nuget restore
+- cmd: nuget restore src/titcs.sharepoint.ssom.sln
 build:
   publish_nuget: true
   publish_nuget_symbols: true
