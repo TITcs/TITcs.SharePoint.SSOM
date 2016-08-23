@@ -9,7 +9,7 @@ after_build:
 test: off      
       
 artifacts:
-  - path: src\nuget\titcs.sharepoint
+  - path: src\nuget\titcs.sharepoint.ssom
     name: src
 
 deploy:
