@@ -95,18 +95,15 @@ namespace TITcs.SharePoint.SSOM
             return result;
         }
 
-        public int Insert(Fields<TEntity> fields)
+        protected int Insert(Fields<TEntity> fields)
         {
-            Logger.Logger.Information("SharePointRepository<TEntity>.Insert", string.Format("List = {0}, ToArray = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
+            Logger.Logger.Information("SharePointRepository<TEntity>.Insert", string.Format("List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
 
             return Call(() =>
             {
                 using (_rootWeb)
                 {
-                    var list = _rootWeb.Lists.TryGetList(Title);
-
-                    if (list == null)
-                        throw new Exception(string.Format("The list \"{0}\" not found", Title));
+                    var list = getList();
 
                     SPListItem newitem = list.AddItem();
 
@@ -123,6 +120,55 @@ namespace TITcs.SharePoint.SSOM
                     _rootWeb.AllowUnsafeUpdates = allowUnsafeUpdates;
 
                     return newitem.ID;
+                }
+
+            });
+        }
+
+        private SPList getList()
+        {
+            var list = _rootWeb.Lists.TryGetList(Title);
+
+            if (list == null)
+                throw new Exception(string.Format("The list \"{0}\" not found", Title));
+
+            return list;
+        }
+
+        protected void Update(Fields<TEntity> fields)
+        {
+            Logger.Logger.Information("SharePointRepository<TEntity>.Update", string.Format("List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
+
+            if (!fields.ItemDictionary.ContainsKey("ID"))
+                throw new ArgumentException("Can not update the item without the ID field");
+
+            var itemId = fields.ItemDictionary["ID"].ToString();
+
+            Int32 id = 0;
+
+            if (!Int32.TryParse(itemId, out id))
+                throw new ArgumentException("Invalid ID");
+
+            Exec(() =>
+            {
+                using (_rootWeb)
+                {
+                    var list = getList();
+
+                    bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
+                    _rootWeb.AllowUnsafeUpdates = true;
+
+                    var item = list.GetItemById(id);
+
+                    foreach (var field in fields.ItemDictionary)
+                    {
+                        if (!field.Key.Equals("ID", StringComparison.InvariantCultureIgnoreCase))
+                            item[field.Key] = field.Value;
+                    }
+
+                    item.Update();
+
+                    _rootWeb.AllowUnsafeUpdates = allowUnsafeUpdates;
                 }
 
             });

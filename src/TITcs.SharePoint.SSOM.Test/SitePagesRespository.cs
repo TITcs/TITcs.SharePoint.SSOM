@@ -19,5 +19,26 @@ namespace TITcs.SharePoint.SSOM.Test
 
             return result;
         }
+
+        public int Add(string title)
+        {
+            var fields = new Fields<Item>();
+
+            fields.Add(i => i.Title, title);
+
+            var id = Insert(fields);
+
+            return id;
+        }
+
+        public void Update(int id, string title)
+        {
+            var fields = new Fields<Item>();
+
+            fields.Add(i => i.Id, 21);
+            fields.Add(i => i.Title, title);
+
+            Update(fields);
+        }
     }
 }
