@@ -96,7 +96,10 @@
     <Compile Include="SharePointItem.cs" />
     <Compile Include="SharePointListAttribute.cs" />
     <Compile Include="SharePointRepository.cs" />
+    <Compile Include="Extensions\SPWebExtensions.cs" />
     <Compile Include="Url.cs" />
+    <Compile Include="User.cs" />
+    <Compile Include="Group.cs" />
     <Compile Include="Utils\AppSettingsUtils.cs" />
     <Compile Include="Utils\CacheUtils.cs" />
     <Compile Include="Utils\EventReceiverUtils.cs" />

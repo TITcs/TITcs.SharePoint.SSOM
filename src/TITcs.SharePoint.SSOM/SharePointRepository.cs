@@ -496,5 +496,81 @@ namespace TITcs.SharePoint.SSOM
 
             throw new Exception(string.Format("Type \"{0}\" was not implemented.", field.Type));
         }
+
+        protected void Delete(int id)
+        {
+            Logger.Logger.Information("SharePointRepository<TEntity>.Delete", string.Format("List = {0}, ID = {1}", Title, id));
+
+            Exec(() =>
+            {
+                using (_rootWeb)
+                {
+                    var list = getList();
+
+                    bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
+                    _rootWeb.AllowUnsafeUpdates = true;
+
+                    var item = list.GetItemById(id);
+
+                    item.Delete();
+
+                    _rootWeb.AllowUnsafeUpdates = allowUnsafeUpdates;
+                }
+            });
+        }
+
+        protected File UploadImage(string fileName, Stream stream, Fields<TEntity> fields = null, int maxLength = 4000000)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                throw new Exception("The file name can not be null.");
+
+            if (stream.Length > maxLength)
+                throw new Exception(string.Format("The maximum file size is {0}mb", ConvertBytesToMegabytes(maxLength)));
+
+            string ext = Path.GetExtension(fileName).ToLower();
+
+            if (ext == null || (ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".tif" && ext != ".gif"))
+                throw new Exception("The image is not in the correct format. The allowed formats are: gif, jpg, png, bmp, tif e jpeg.");
+
+            fileName = fileName.Replace(" ", "-");
+
+            return Call(() =>
+            {
+                using (_rootWeb)
+                {
+                    var list = getList();
+
+                    var fileRef = string.Format("{0}/{1}", list.RootFolder.ServerRelativeUrl, fileName);
+
+                    bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
+                    _rootWeb.AllowUnsafeUpdates = true;
+
+                    var file = list.RootFolder.Files.Add(fileRef, stream, true);
+
+                    if (fields != null)
+                    {
+                        foreach (var item in fields.ItemDictionary)
+                        {
+                            file.Item[item.Key] = item.Value;
+                        }
+                        file.Item.Update();
+
+                    }
+
+                    _rootWeb.AllowUnsafeUpdates = allowUnsafeUpdates;
+
+                    return new File
+                    {
+                        Url = fileRef,
+                        Name = fileName
+                    };
+                }
+            });
+        }
+
+        private double ConvertBytesToMegabytes(long bytes)
+        {
+            return (bytes / 1024f) / 1024f;
+        }
     }
 }

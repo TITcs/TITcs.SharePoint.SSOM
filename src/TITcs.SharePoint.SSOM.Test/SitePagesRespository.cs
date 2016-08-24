@@ -1,4 +1,6 @@
-﻿using Microsoft.SharePoint;
+﻿using System;
+using System.IO;
+using Microsoft.SharePoint;
 using System.Linq;
 
 namespace TITcs.SharePoint.SSOM.Test
