@@ -1,4 +1,5 @@
-﻿using Microsoft.SharePoint;
+﻿using System;
+using Microsoft.SharePoint;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TITcs.SharePoint.SSOM.Test
@@ -32,14 +33,26 @@ namespace TITcs.SharePoint.SSOM.Test
                 using (SPWeb web = site.OpenWeb())
                 {
                     var sitePages = new SitePagesRepository(web);
-                    
-                    var fields = new Fields<Item>();
 
-                    fields.Add(i => i.Title, "Item 1");
-
-                    var id = sitePages.Insert(fields);
+                    var id = sitePages.Add("Item 1");
                     
                     Assert.IsTrue(id > 0);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void UpdateItem()
+        {
+            using (SPSite site = new SPSite("http://captime.dev.titcs.com.br"))
+            {
+                using (SPWeb web = site.OpenWeb())
+                {
+                    var sitePages = new SitePagesRepository(web);
+
+                    sitePages.Update(21, Guid.NewGuid().ToString());
+
+                    Assert.IsTrue(true);
                 }
             }
         }
