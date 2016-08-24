@@ -1,7 +1,7 @@
 ﻿using System;
-using TITcs.SharePoint.SOM.Caching;
+using TITcs.SharePoint.SSOM.Caching;
 
-namespace TITcs.SharePoint.SOM.Utils
+namespace TITcs.SharePoint.SSOM.Utils
 {
     public class CacheUtils
     {

@@ -1,4 +1,4 @@
-﻿namespace TITcs.SharePoint.SOM.Logger
+﻿namespace TITcs.SharePoint.SSOM.Logger
 {
     public enum LoggerCategory
     {

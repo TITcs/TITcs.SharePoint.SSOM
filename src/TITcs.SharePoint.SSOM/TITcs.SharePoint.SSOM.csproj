@@ -78,6 +78,7 @@
     <Compile Include="Extensions\ConvertExtensions.cs" />
     <Compile Include="Extensions\LinqExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Fields.cs" />
     <Compile Include="File.cs" />
     <Compile Include="Logger\LoggerCategory.cs" />
     <Compile Include="Logger\Logger.cs" />

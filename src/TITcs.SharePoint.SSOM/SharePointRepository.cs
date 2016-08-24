@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace TITcs.SharePoint.SOM
+namespace TITcs.SharePoint.SSOM
 {
     public abstract class SharePointRepository<TEntity> where TEntity : class
     {
@@ -70,7 +70,7 @@ namespace TITcs.SharePoint.SOM
                     var list = _rootWeb.Lists.TryGetList(Title);
 
                     if (list == null)
-                        throw new Exception(string.Format("The list \"{0}\" not found"));
+                        throw new Exception(string.Format("The list \"{0}\" not found", Title));
 
                     SPQuery query = new SPQuery
                     {
@@ -95,6 +95,38 @@ namespace TITcs.SharePoint.SOM
             return result;
         }
 
+        public int Insert(Fields<TEntity> fields)
+        {
+            Logger.Logger.Information("SharePointRepository<TEntity>.Insert", string.Format("List = {0}, ToArray = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
+
+            return Call(() =>
+            {
+                using (_rootWeb)
+                {
+                    var list = _rootWeb.Lists.TryGetList(Title);
+
+                    if (list == null)
+                        throw new Exception(string.Format("The list \"{0}\" not found", Title));
+
+                    SPListItem newitem = list.AddItem();
+
+                    bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
+                    _rootWeb.AllowUnsafeUpdates = true;
+
+                    foreach (var field in fields.ItemDictionary)
+                    {
+                        newitem[field.Key] = field.Value;
+                    }
+
+                    newitem.Update();
+
+                    _rootWeb.AllowUnsafeUpdates = allowUnsafeUpdates;
+
+                    return newitem.ID;
+                }
+
+            });
+        }
 
         //public ICollection<TEntity> GetAll(string camlQuery, uint pageIndex, uint pageSize, string lastPosition)
         public ICollection<TEntity> GetAll(string camlQuery = null)
@@ -110,7 +142,7 @@ namespace TITcs.SharePoint.SOM
                     var list = _rootWeb.Lists.TryGetList(Title);
 
                     if (list == null)
-                        throw new Exception(string.Format("The list \"{0}\" not found"));
+                        throw new Exception(string.Format("The list \"{0}\" not found", Title));
 
                     SPQuery query = new SPQuery();
 
@@ -151,8 +183,7 @@ namespace TITcs.SharePoint.SOM
 
             return result;
         }
-
-
+        
         private void SetProperties(TEntity entity, SPListItem listItem)
         {
             typeof(TEntity).GetProperties().ToList().ForEach(p =>

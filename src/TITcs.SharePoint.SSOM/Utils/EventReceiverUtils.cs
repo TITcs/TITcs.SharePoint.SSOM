@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using Microsoft.SharePoint;
-using TITcs.SharePoint.SOM.Logger;
+using TITcs.SharePoint.SSOM.Logger;
 
-namespace TITcs.SharePoint.SOM.Utils
+namespace TITcs.SharePoint.SSOM.Utils
 {
     public static class EventReceiverUtils
     {

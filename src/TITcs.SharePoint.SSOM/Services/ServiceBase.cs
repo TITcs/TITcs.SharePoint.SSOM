@@ -6,7 +6,7 @@ using System.Web.SessionState;
 using Newtonsoft.Json;
 
 
-namespace TITcs.SharePoint.SOM.Services
+namespace TITcs.SharePoint.SSOM.Services
 {
     public abstract class ServiceBase : IHttpHandler, IRequiresSessionState
     {

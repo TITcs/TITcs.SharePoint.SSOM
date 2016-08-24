@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Web;
 
-namespace TITcs.SharePoint.SOM.Services
+namespace TITcs.SharePoint.SSOM.Services
 {
     public class HandlerFactory : IHttpHandlerFactory
     {

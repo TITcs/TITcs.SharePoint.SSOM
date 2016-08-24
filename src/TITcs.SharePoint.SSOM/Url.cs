@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TITcs.SharePoint.SOM
+namespace TITcs.SharePoint.SSOM
 {
     public class Url
     {

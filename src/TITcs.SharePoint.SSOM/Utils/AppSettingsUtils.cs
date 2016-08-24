@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TITcs.SharePoint.SOM.Utils
+namespace TITcs.SharePoint.SSOM.Utils
 {
     public static class AppSettingsUtils
     {

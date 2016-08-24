@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TITcs.SharePoint.SOM")]
+[assembly: AssemblyTitle("TITcs.SharePoint.SSOM")]
 [assembly: AssemblyDescription("Framework for SharePoint Server Context")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("TITcs")]
-[assembly: AssemblyProduct("TITcs.SharePoint.SOM")]
+[assembly: AssemblyProduct("TITcs.SharePoint.SSOM")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

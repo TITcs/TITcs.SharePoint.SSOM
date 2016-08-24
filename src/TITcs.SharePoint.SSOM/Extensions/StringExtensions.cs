@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace TITcs.SharePoint.SOM.Extensions
+namespace TITcs.SharePoint.SSOM.Extensions
 {
     public static class StringExtensions
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
 
-namespace TITcs.SharePoint.SOM.Services
+namespace TITcs.SharePoint.SSOM.Services
 {
     public sealed class ModelObject : DynamicObject
     {

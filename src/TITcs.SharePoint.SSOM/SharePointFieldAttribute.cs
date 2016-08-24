@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TITcs.SharePoint.SOM
+namespace TITcs.SharePoint.SSOM
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false)]
     public class SharePointFieldAttribute : Attribute

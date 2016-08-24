@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Caching;
-using TITcs.SharePoint.SOM.Utils;
+using TITcs.SharePoint.SSOM.Utils;
 
-namespace TITcs.SharePoint.SOM.Caching
+namespace TITcs.SharePoint.SSOM.Caching
 {
     public class Cache
     {

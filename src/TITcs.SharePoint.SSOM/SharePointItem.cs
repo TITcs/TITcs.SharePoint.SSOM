@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 
-namespace TITcs.SharePoint.SOM
+namespace TITcs.SharePoint.SSOM
 {
     public abstract class SharePointItem
     {
@@ -11,11 +11,11 @@ namespace TITcs.SharePoint.SOM
 
         [JsonProperty("title")]
         [SharePointField("Title")]
-        public virtual string Titulo { get; set; }
+        public virtual string Title { get; set; }
 
         [JsonProperty("created")]
         [SharePointField("Created")]
-        public virtual DateTime Criado { get; set; }
+        public virtual DateTime Created { get; set; }
 
         [JsonProperty("author")]
         //public int _Level { get; set; }
