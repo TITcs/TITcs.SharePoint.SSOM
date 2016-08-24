@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TITcs.SharePoint.SOM.Services
+namespace TITcs.SharePoint.SSOM.Services
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class RouteAttribute : Attribute

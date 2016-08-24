@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace TITcs.SharePoint.SOM
+namespace TITcs.SharePoint.SSOM
 {
     public class File
     {

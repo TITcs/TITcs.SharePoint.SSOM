@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.SharePoint;
-using TITcs.SharePoint.SOM.Logger;
+using TITcs.SharePoint.SSOM.Logger;
 
 namespace TITcs.SharePoint.SSOM.Utils
 {
@@ -33,7 +33,7 @@ namespace TITcs.SharePoint.SSOM.Utils
 
                 list.Update();
 
-                Logger.Information("ListUtils.EnableAccessAnonymous", "Anonymous access enabled in the \"{0}\"", listTitle);
+                Logger.Logger.Information("ListUtils.EnableAccessAnonymous", "Anonymous access enabled in the \"{0}\"", listTitle);
             });
 
         }
@@ -67,7 +67,7 @@ namespace TITcs.SharePoint.SSOM.Utils
             {
                 if (list.ItemCount > 0 && !allow)
                 {
-                    Logger.Unexpected("ListUtils.AllowDuplicateValues", "Could not allow duplicate values for the field \"{0}\" list \"{1}\" because it contains items. Remove all items from the list.", fieldName, listTitle);
+                    Logger.Logger.Unexpected("ListUtils.AllowDuplicateValues", "Could not allow duplicate values for the field \"{0}\" list \"{1}\" because it contains items. Remove all items from the list.", fieldName, listTitle);
                     return;
                 }
 
@@ -87,7 +87,7 @@ namespace TITcs.SharePoint.SSOM.Utils
                     if (!allow)
                         message = "The \"{0}\" field allows duplicate values";
 
-                    Logger.Information("ListUtils.AllowDuplicateValues", message, fieldName);
+                    Logger.Logger.Information("ListUtils.AllowDuplicateValues", message, fieldName);
                 }
             });
         }
@@ -105,7 +105,7 @@ namespace TITcs.SharePoint.SSOM.Utils
                     field.Update();
                     list.Update();
 
-                    Logger.Information("ListUtils.ChangeDisplayNameInField", "The display name of the \"{0}\" list \"{1}\" was changed to \"{2}\"", listTitle, fieldName, displayName);
+                    Logger.Logger.Information("ListUtils.ChangeDisplayNameInField", "The display name of the \"{0}\" list \"{1}\" was changed to \"{2}\"", listTitle, fieldName, displayName);
                 }
             });
         }
@@ -118,7 +118,7 @@ namespace TITcs.SharePoint.SSOM.Utils
                 list.Title = title;
                 list.Update();
 
-                Logger.Information("ListUtils.ChangeTitle", "The title of the list \"{0}\" has changed to \"{1}\"", listTitle, title);
+                Logger.Logger.Information("ListUtils.ChangeTitle", "The title of the list \"{0}\" has changed to \"{1}\"", listTitle, title);
 
             });
         }
@@ -132,11 +132,11 @@ namespace TITcs.SharePoint.SSOM.Utils
                 list.Update();
 
                 if (draftVisibilityType == DraftVisibilityType.Reader)
-                    Logger.Information("ListUtils.ChangeTitle", "The list \"{0}\" has setted to \"Any user who can read items\"", listTitle);
+                    Logger.Logger.Information("ListUtils.ChangeTitle", "The list \"{0}\" has setted to \"Any user who can read items\"", listTitle);
                 else if (draftVisibilityType == DraftVisibilityType.Author)
-                    Logger.Information("ListUtils.ChangeTitle", "The list \"{0}\" has setted to \"Only users who can edit items\"", listTitle);
+                    Logger.Logger.Information("ListUtils.ChangeTitle", "The list \"{0}\" has setted to \"Only users who can edit items\"", listTitle);
                 else if (draftVisibilityType == DraftVisibilityType.Approver)
-                    Logger.Information("ListUtils.ChangeTitle", "The list \"{0}\" has setted to \"Only users who can approve items (and the author of the item)\"", listTitle);
+                    Logger.Logger.Information("ListUtils.ChangeTitle", "The list \"{0}\" has setted to \"Only users who can approve items (and the author of the item)\"", listTitle);
 
             });
         }
@@ -155,7 +155,7 @@ namespace TITcs.SharePoint.SSOM.Utils
                 web.AllowUnsafeUpdates = allowSafeUpdates;
             }
             else
-                Logger.Unexpected("ListUtils.runCodeInListInstance", "The list \"{0}\" does not exist", listTitle);
+                Logger.Logger.Unexpected("ListUtils.runCodeInListInstance", "The list \"{0}\" does not exist", listTitle);
         }
 
         public static void AddField(SPWeb web, string listTitle, string internalNameOfField, string displayNameOfField, bool isViewField, bool showEditCreateForm, bool showDisplayForm)
@@ -203,13 +203,13 @@ namespace TITcs.SharePoint.SSOM.Utils
                         }
                     }
 
-                    Logger.Information("ListUtils.AddField", "The field \"{0}\" was added to the list \"{1}\"", displayNameOfField, listTitle);
+                    Logger.Logger.Information("ListUtils.AddField", "The field \"{0}\" was added to the list \"{1}\"", displayNameOfField, listTitle);
 
                     list.Update();
                 }
                 else
                 {
-                    Logger.Unexpected("ListUtils.AddField", string.Format("There is already a field in the list \"{2}\" with the name \"{0}\" and internal name \"{1}\"", displayNameOfField, internalNameOfField, listTitle));
+                    Logger.Logger.Unexpected("ListUtils.AddField", string.Format("There is already a field in the list \"{2}\" with the name \"{0}\" and internal name \"{1}\"", displayNameOfField, internalNameOfField, listTitle));
                 }
             });
         }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TITcs.SharePoint.SOM.Extensions
+namespace TITcs.SharePoint.SSOM.Extensions
 {
     public static class LinqExtensions
     {

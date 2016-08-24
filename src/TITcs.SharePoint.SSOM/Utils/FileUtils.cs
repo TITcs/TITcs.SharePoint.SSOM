@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using Microsoft.SharePoint;
-using TITcs.SharePoint.SOM.Logger;
+using TITcs.SharePoint.SSOM.Logger;
 
 namespace TITcs.SharePoint.SSOM.Utils
 {
@@ -22,7 +22,7 @@ namespace TITcs.SharePoint.SSOM.Utils
                 if (spFile.Exists)
                     spFile.Delete();
 
-                Logger.Information("FileUtils.Delete", "Deleted file: {0}", file);
+                Logger.Logger.Information("FileUtils.Delete", "Deleted file: {0}", file);
             }
         }
 
@@ -39,7 +39,7 @@ namespace TITcs.SharePoint.SSOM.Utils
 
                 var spFile = web.GetFile(file);
 
-                Logger.Information("FileUtils.GetStream", "RelativePath: {0}", file);
+                Logger.Logger.Debug("FileUtils.GetStream", "RelativePath: {0}", file);
 
                 return CopyStream(spFile);
             }

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace TITcs.SharePoint.SOM.Security
+namespace TITcs.SharePoint.SSOM.Security
 {
     public class ImpersonateUser
     {

@@ -1,5 +1,5 @@
 ﻿
-namespace TITcs.SharePoint.SOM
+namespace TITcs.SharePoint.SSOM
 {
     public class Lookup
     {

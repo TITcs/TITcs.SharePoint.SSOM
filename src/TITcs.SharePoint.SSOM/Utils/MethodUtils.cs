@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TITcs.SharePoint.SOM.Utils
+namespace TITcs.SharePoint.SSOM.Utils
 {
     public static class MethodUtils
     {

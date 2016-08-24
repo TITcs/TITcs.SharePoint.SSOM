@@ -7,7 +7,7 @@ using System.Net.Mime;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
 
-namespace TITcs.SharePoint.SOM.Utils
+namespace TITcs.SharePoint.SSOM.Utils
 {
     public static class MailUtils
     {

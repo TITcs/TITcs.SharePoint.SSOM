@@ -1,9 +1,7 @@
-﻿using System;
-
-using Microsoft.SharePoint;
+﻿using Microsoft.SharePoint;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TITcs.SharePoint.SOM.Test
+namespace TITcs.SharePoint.SSOM.Test
 {
     [TestClass]
     public class SitePagesTest
@@ -24,9 +22,26 @@ namespace TITcs.SharePoint.SOM.Test
                     Assert.IsTrue(item.Count > 0);
                 }
             }
+        }
 
+        [TestMethod]
+        public void InsertItem()
+        {
+            using (SPSite site = new SPSite("http://captime.dev.titcs.com.br"))
+            {
+                using (SPWeb web = site.OpenWeb())
+                {
+                    var sitePages = new SitePagesRepository(web);
+                    
+                    var fields = new Fields<Item>();
 
+                    fields.Add(i => i.Title, "Item 1");
 
+                    var id = sitePages.Insert(fields);
+                    
+                    Assert.IsTrue(id > 0);
+                }
+            }
         }
     }
 }

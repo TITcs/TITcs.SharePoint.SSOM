@@ -2,7 +2,7 @@
 using Microsoft.SharePoint.Administration;
 using System.Collections.Generic;
 
-namespace TITcs.SharePoint.SOM.Logger
+namespace TITcs.SharePoint.SSOM.Logger
 {
     public class Logger : SPDiagnosticsServiceBase
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TITcs.SharePoint.SOM
+namespace TITcs.SharePoint.SSOM
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class SharePointListAttribute : Attribute

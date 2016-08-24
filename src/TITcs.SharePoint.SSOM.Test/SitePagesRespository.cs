@@ -1,11 +1,8 @@
 ﻿using Microsoft.SharePoint;
 using System.Linq;
 
-namespace TITcs.SharePoint.SOM.Test
+namespace TITcs.SharePoint.SSOM.Test
 {
-    class SitePagesRespository
-    {
-    }
     [SharePointList("Teste")]
     public class SitePagesRepository : SharePointRepository<Item>
     {
