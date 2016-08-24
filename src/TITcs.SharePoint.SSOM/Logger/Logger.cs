@@ -64,5 +64,10 @@ namespace TITcs.SharePoint.SOM.Logger
         {
             WriteLog(LoggerCategory.Unexpected, source, message);
         }
+
+        public static void Unexpected(string source, string message, params object[] parameters)
+        {
+            WriteLog(LoggerCategory.Unexpected, source, string.Format(message, parameters));
+        }
     }
 }
