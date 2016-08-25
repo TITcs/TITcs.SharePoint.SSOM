@@ -18,7 +18,7 @@ namespace TITcs.SharePoint.SSOM.Services
             {
                 if (_handlerTypes == null)
                 {
-                    _serviceSection = (SharePointServiceSection)ConfigurationManager.GetSection("sharePointServices/service");
+                    _serviceSection = (SharePointServiceSection)ConfigurationManager.GetSection("sharePointService/service");
 
                     if (_serviceSection.FilterType == FilterType.AssemblyName)
                     {
