@@ -3,13 +3,13 @@
 Adding in the web.config located in C:\inetpub\wwwroot\wss\VirtualDirectories\[SHAREPOINT_SITE]:
 
   <configSections>
-    <sectionGroup name="sharePointServices">
+    <sectionGroup name="sharePointService">
       <section name="service" type="TITcs.SharePoint.SOM.Services.SharePointServiceSection"/>
     </sectionGroup>
   </configSections>
-  <sharePointServices>
+  <sharePointService>
     <service assemblyName="[NAME_ASSEMBLY_SHAREPOINT_PROJECT]" />
-  </sharePointServices>
+  </sharePointService>
   <appSettings>
     <add key="CacheDurationInMinutes" value="10"/>
   </appSettings>
