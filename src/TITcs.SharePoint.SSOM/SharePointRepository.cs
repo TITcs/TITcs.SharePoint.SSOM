@@ -112,6 +112,21 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
+                        if (field.Value is Collection<Lookup>)
+                        {
+                            var fieldValues = new SPFieldLookupValueCollection();
+
+                            foreach (var keyValuePair in (Collection<Lookup>)field.Value)
+                            {
+                                fieldValues.Add(new SPFieldLookupValue
+                                {
+                                    LookupId = keyValuePair.Id
+                                });
+                            }
+                            newitem[field.Key] = fieldValues;
+                            continue;
+                        }
+
                         newitem[field.Key] = field.Value;
                     }
 
