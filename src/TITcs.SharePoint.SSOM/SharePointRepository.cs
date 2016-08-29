@@ -155,15 +155,15 @@ namespace TITcs.SharePoint.SSOM
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Update", string.Format("List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
 
-            if (!fields.ItemDictionary.ContainsKey("ID"))
-                throw new ArgumentException("Can not update the item without the ID field");
+            if (!fields.ItemDictionary.ContainsKey("Id"))
+                throw new ArgumentException("Can not update the item without the Id field");
 
-            var itemId = fields.ItemDictionary["ID"].ToString();
+            var itemId = fields.ItemDictionary["Id"].ToString();
 
             Int32 id = 0;
 
             if (!Int32.TryParse(itemId, out id))
-                throw new ArgumentException("Invalid ID");
+                throw new ArgumentException("Invalid Id");
 
             Exec(() =>
             {
@@ -178,7 +178,7 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
-                        if (!field.Key.Equals("ID", StringComparison.InvariantCultureIgnoreCase))
+                        if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
                             item[field.Key] = field.Value;
                     }
 
@@ -245,7 +245,7 @@ namespace TITcs.SharePoint.SSOM
 
             return result;
         }
-        
+
         private void SetProperties(TEntity entity, SPListItem listItem)
         {
             typeof(TEntity).GetProperties().ToList().ForEach(p =>

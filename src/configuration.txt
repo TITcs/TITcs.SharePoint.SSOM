@@ -4,7 +4,7 @@ Adding in the web.config located in C:\inetpub\wwwroot\wss\VirtualDirectories\[S
 
   <configSections>
     <sectionGroup name="sharePointService">
-      <section name="service" type="TITcs.SharePoint.SOM.Services.SharePointServiceSection"/>
+      <section name="service" type="TITcs.SharePoint.SSOM.Services.SharePointServiceSection"/>
     </sectionGroup>
   </configSections>
   <sharePointService>
@@ -15,6 +15,6 @@ Adding in the web.config located in C:\inetpub\wwwroot\wss\VirtualDirectories\[S
   </appSettings>
   <system.webServer>
     <handlers>
-      <add name="HandlerFactory" verb="*" path="*.sps" type="TITcs.SharePoint.SOM.Services.HandlerFactory"/>
+      <add name="HandlerFactory" verb="*" path="*.sps" type="TITcs.SharePoint.SSOM.Services.HandlerFactory"/>
     </handlers>
   </system.webServer>
