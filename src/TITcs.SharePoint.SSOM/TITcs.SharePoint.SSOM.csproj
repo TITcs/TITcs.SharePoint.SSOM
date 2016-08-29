@@ -101,6 +101,7 @@
     <Compile Include="SharePointFieldAttribute.cs" />
     <Compile Include="SharePointItem.cs" />
     <Compile Include="SharePointListAttribute.cs" />
+    <Compile Include="SharePointPagedData.cs" />
     <Compile Include="SharePointRepository.cs" />
     <Compile Include="Extensions\SPWebExtensions.cs" />
     <Compile Include="Url.cs" />
