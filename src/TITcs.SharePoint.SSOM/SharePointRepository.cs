@@ -1,5 +1,6 @@
 ﻿using Microsoft.SharePoint;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -112,11 +113,11 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
-                        if (field.Value is Collection<Lookup>)
+                        if (field.Value is IEnumerable<Lookup>)
                         {
                             var fieldValues = new SPFieldLookupValueCollection();
 
-                            foreach (var keyValuePair in (Collection<Lookup>)field.Value)
+                            foreach (var keyValuePair in (IEnumerable<Lookup>)field.Value)
                             {
                                 fieldValues.Add(new SPFieldLookupValue
                                 {
@@ -577,7 +578,11 @@ namespace TITcs.SharePoint.SSOM
                     return new File
                     {
                         Url = fileRef,
-                        Name = fileName
+                        Name = fileName,
+                        Length = stream.Length,
+                        Created = DateTime.Now,
+                        Extension = ext,
+                        Title = fileName
                     };
                 }
             });
