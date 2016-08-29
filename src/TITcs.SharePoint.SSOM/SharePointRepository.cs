@@ -113,6 +113,8 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
+                        var columnName = getFieldColumn(typeof(TEntity), field.Key);
+
                         if (field.Value is IEnumerable<Lookup>)
                         {
                             var fieldValues = new SPFieldLookupValueCollection();
@@ -124,11 +126,11 @@ namespace TITcs.SharePoint.SSOM
                                     LookupId = keyValuePair.Id
                                 });
                             }
-                            newitem[field.Key] = fieldValues;
+                            newitem[columnName] = fieldValues;
                             continue;
                         }
 
-                        newitem[field.Key] = field.Value;
+                        newitem[columnName] = field.Value;
                     }
 
                     newitem.Update();
@@ -149,6 +151,57 @@ namespace TITcs.SharePoint.SSOM
                 throw new Exception(string.Format("The list \"{0}\" not found", Title));
 
             return list;
+        }
+
+        private ICollection<TEntity> getAll(string camlQuery, ref string lastPosition)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetAll", "Query = {0}", camlQuery);
+            
+            using (_rootWeb)
+            {
+                _rootWeb.CacheAllSchema = false;
+
+                var list = _rootWeb.Lists.TryGetList(Title);
+
+                if (list == null)
+                    throw new Exception(string.Format("The list \"{0}\" not found", Title));
+
+                SPQuery query = new SPQuery();
+
+                if (RowLimit > 0)
+                    query.RowLimit = RowLimit;
+
+                if (!string.IsNullOrEmpty(camlQuery))
+                    query.Query = camlQuery;
+
+                if (!string.IsNullOrEmpty(lastPosition))
+                {
+                    var pos = new SPListItemCollectionPosition(lastPosition);
+                    query.ListItemCollectionPosition = pos;
+                }
+
+                SPListItemCollection items = list.GetItems(query);
+
+                if (items.ListItemCollectionPosition != null && RowLimit > 0)
+                {
+                    lastPosition = items.ListItemCollectionPosition.PagingInfo;
+                }
+
+                ICollection<TEntity> entities = new Collection<TEntity>();
+
+                if (items.Count > 0)
+                {
+                    foreach (var listItem in items.Cast<SPListItem>().ToList())
+                    {
+                        var entity = (TEntity) Activator.CreateInstance(typeof(TEntity));
+                        SetProperties(entity, listItem);
+                        entities.Add(entity);
+                    }
+                }
+
+                return entities;
+            }
+
         }
 
         protected void Update(Fields<TEntity> fields)
@@ -178,8 +231,10 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
+                        var columnName = getFieldColumn(typeof(TEntity), field.Key);
+
                         if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
-                            item[field.Key] = field.Value;
+                            item[columnName] = field.Value;
                     }
 
                     item.Update();
@@ -188,6 +243,11 @@ namespace TITcs.SharePoint.SSOM
                 }
 
             });
+        }
+
+        private string getFieldColumn(Type type, string columnName)
+        {
+            return type.GetProperties().Single(p => p.Name == columnName).GetCustomAttribute<SharePointFieldAttribute>().Name;
         }
 
         //public ICollection<TEntity> GetAll(string camlQuery, uint pageIndex, uint pageSize, string lastPosition)
