@@ -74,6 +74,25 @@ namespace TITcs.SharePoint.SSOM.Extensions
 
 
         }
+
+        public static void CreateGroup(SPWeb web, string name, string descrition = "", SPRoleType roleType = SPRoleType.Reader)
+        {
+
+            int Count = web.Groups.OfType<SPGroup>().Count(g => g.Name.Equals(name));
+            if (Count == 0)
+            {
+                web.SiteGroups.Add(name, web.SiteAdministrators[0], web.SiteAdministrators[0], descrition);
+                SPGroup group = web.SiteGroups[name];
+
+                SPRoleDefinition roleDefinition = web.RoleDefinitions.GetByType(roleType);
+                SPRoleAssignment roleAssignment = new SPRoleAssignment(group);
+                roleAssignment.RoleDefinitionBindings.Add(roleDefinition);
+                web.RoleAssignments.Add(roleAssignment);
+                web.Update();
+            }
+
+        }
+
         #endregion SiteGroups
 
         public static Dictionary<string, string[]> LoadFieldValues(this SPWeb web, params string[] fieldName)
