@@ -206,9 +206,9 @@ namespace TITcs.SharePoint.SSOM
             return type.GetProperties().Single(p => p.Name == columnName).GetCustomAttribute<SharePointFieldAttribute>().Name;
         }
 
-        public SharePointPagedData<TEntity> GetAll(string lastPosition, string camlQuery = null, uint pageSize = 0)
+        public SharePointPagedData<TEntity> GetAll(string lastPosition, string camlQuery = null)
         {
-            Logger.Logger.Debug("SharePointRepository.GetAll", "Query = {0}", camlQuery);
+            Logger.Logger.Debug("SharePointRepository.GetAll", "Lastposition = {0}, Query = {1}", lastPosition, camlQuery);
 
             var result = Call(() =>
             {
@@ -220,7 +220,7 @@ namespace TITcs.SharePoint.SSOM
 
                     SPQuery query = new SPQuery
                     {
-                        RowLimit = pageSize > 0 ? pageSize : 10
+                        RowLimit = RowLimit
                     };
 
                     if (!string.IsNullOrEmpty(camlQuery))
@@ -232,7 +232,7 @@ namespace TITcs.SharePoint.SSOM
                         query.ListItemCollectionPosition = pos;
                     }
 
-                    SPListItemCollection items = list.GetItems(query);
+                    var items = list.GetItems(query);
 
                     if (items.ListItemCollectionPosition != null && RowLimit > 0)
                     {
@@ -268,7 +268,7 @@ namespace TITcs.SharePoint.SSOM
                     if (!string.IsNullOrEmpty(camlQuery))
                         query.Query = camlQuery;
 
-                    SPListItemCollection items = list.GetItems(query);
+                    var items = list.GetItems(query);
 
                     var entities = PopulateItems(items);
 
