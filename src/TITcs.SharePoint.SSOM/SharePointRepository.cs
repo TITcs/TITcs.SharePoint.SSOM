@@ -218,10 +218,7 @@ namespace TITcs.SharePoint.SSOM
 
                     var list = getList();
 
-                    SPQuery query = new SPQuery
-                    {
-                        RowLimit = RowLimit
-                    };
+                    SPQuery query = new SPQuery();
 
                     if (!string.IsNullOrEmpty(camlQuery))
                         query.Query = camlQuery;
@@ -234,6 +231,8 @@ namespace TITcs.SharePoint.SSOM
                     {
                         var pos = new SPListItemCollectionPosition(lastPosition);
                         query.ListItemCollectionPosition = pos;
+
+                        query.RowLimit = RowLimit;
 
                         items = list.GetItems(query);
                     }
