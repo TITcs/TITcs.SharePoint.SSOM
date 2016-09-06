@@ -226,13 +226,17 @@ namespace TITcs.SharePoint.SSOM
                     if (!string.IsNullOrEmpty(camlQuery))
                         query.Query = camlQuery;
 
+                    var items = list.GetItems(query);
+
+                    var totalItems = items.Count;
+
                     if (!string.IsNullOrEmpty(lastPosition))
                     {
                         var pos = new SPListItemCollectionPosition(lastPosition);
                         query.ListItemCollectionPosition = pos;
-                    }
 
-                    var items = list.GetItems(query);
+                        items = list.GetItems(query);
+                    }
 
                     if (items.ListItemCollectionPosition != null && RowLimit > 0)
                     {
@@ -241,7 +245,7 @@ namespace TITcs.SharePoint.SSOM
 
                     var entities = PopulateItems(items);
 
-                    return new SharePointPagedData<TEntity>(entities, lastPosition, list.ItemCount);
+                    return new SharePointPagedData<TEntity>(entities, lastPosition, totalItems);
                 }
             });
 
