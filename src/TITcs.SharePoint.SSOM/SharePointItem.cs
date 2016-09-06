@@ -3,7 +3,7 @@ using System;
 
 namespace TITcs.SharePoint.SSOM
 {
-    public abstract class SharePointItem
+    public abstract class SharePointItem : ISharePointItem
     {
         [JsonProperty("id")]
         [SharePointField("ID")]

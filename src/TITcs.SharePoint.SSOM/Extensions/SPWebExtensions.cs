@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.SharePoint;
 
@@ -77,9 +78,11 @@ namespace TITcs.SharePoint.SSOM.Extensions
 
         public static void CreateGroup(SPWeb web, string name, string descrition = "", SPRoleType roleType = SPRoleType.Reader)
         {
+            Logger.Logger.Debug("SPWebExtensions.CreateGroup", "Name = {0}, Description = {1}, RoleType = {2}", name, descrition, Enum.GetName(typeof(SPRoleType), roleType));
 
-            int Count = web.Groups.OfType<SPGroup>().Count(g => g.Name.Equals(name));
-            if (Count == 0)
+            int count = web.Groups.OfType<SPGroup>().Count(g => g.Name.Equals(name));
+
+            if (count == 0)
             {
                 web.SiteGroups.Add(name, web.SiteAdministrators[0], web.SiteAdministrators[0], descrition);
                 SPGroup group = web.SiteGroups[name];
@@ -89,6 +92,8 @@ namespace TITcs.SharePoint.SSOM.Extensions
                 roleAssignment.RoleDefinitionBindings.Add(roleDefinition);
                 web.RoleAssignments.Add(roleAssignment);
                 web.Update();
+
+                Logger.Logger.Information("SPWebExtensions.CreateGroup", "Creted group \"{0}\"", name);
             }
 
         }
