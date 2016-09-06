@@ -8,4 +8,4 @@ Framework for SharePoint Server Context
 Development Guide
 =================
 
-[Configuration](https://github.com/TITcs/TITcs.SharePoint.SSOM/wiki/Developer-Guide)
+[Configuration](https://github.com/TITcs/TITcs.SharePoint.SSOM/wiki/Developer-Guide#Configuration)
