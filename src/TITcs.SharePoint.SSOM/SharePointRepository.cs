@@ -232,10 +232,12 @@ namespace TITcs.SharePoint.SSOM
                         var pos = new SPListItemCollectionPosition(lastPosition);
                         query.ListItemCollectionPosition = pos;
 
-                        query.RowLimit = RowLimit;
-
-                        items = list.GetItems(query);
+                        
                     }
+
+                    query.RowLimit = RowLimit;
+
+                    items = list.GetItems(query);
 
                     if (items.ListItemCollectionPosition != null && RowLimit > 0)
                     {
