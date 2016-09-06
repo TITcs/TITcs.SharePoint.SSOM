@@ -8,4 +8,4 @@ Framework for SharePoint Server Context
 Development Guide
 =================
 
-[[Configuration|Development Guide#Configuration]]
+[[Configuration|Development-Guide#Configuration]]
