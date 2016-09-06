@@ -241,7 +241,7 @@ namespace TITcs.SharePoint.SSOM
 
                     var entities = PopulateItems(items);
 
-                    return new SharePointPagedData<TEntity>(entities, lastPosition);
+                    return new SharePointPagedData<TEntity>(entities, lastPosition, list.ItemCount);
                 }
             });
 
