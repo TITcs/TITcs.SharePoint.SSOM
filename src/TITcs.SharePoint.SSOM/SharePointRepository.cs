@@ -130,6 +130,13 @@ namespace TITcs.SharePoint.SSOM
                             continue;
                         }
 
+                        var lookup = field.Value as Lookup;
+                        if (lookup != null)
+                        {
+                            newitem[columnName] = lookup.Id;
+                            continue;
+                        }
+
                         newitem[columnName] = field.Value;
                     }
 
@@ -151,57 +158,6 @@ namespace TITcs.SharePoint.SSOM
                 throw new Exception(string.Format("The list \"{0}\" not found", Title));
 
             return list;
-        }
-
-        private ICollection<TEntity> getAll(string camlQuery, ref string lastPosition)
-        {
-            Logger.Logger.Debug("SharePointRepository.GetAll", "Query = {0}", camlQuery);
-            
-            using (_rootWeb)
-            {
-                _rootWeb.CacheAllSchema = false;
-
-                var list = _rootWeb.Lists.TryGetList(Title);
-
-                if (list == null)
-                    throw new Exception(string.Format("The list \"{0}\" not found", Title));
-
-                SPQuery query = new SPQuery();
-
-                if (RowLimit > 0)
-                    query.RowLimit = RowLimit;
-
-                if (!string.IsNullOrEmpty(camlQuery))
-                    query.Query = camlQuery;
-
-                if (!string.IsNullOrEmpty(lastPosition))
-                {
-                    var pos = new SPListItemCollectionPosition(lastPosition);
-                    query.ListItemCollectionPosition = pos;
-                }
-
-                SPListItemCollection items = list.GetItems(query);
-
-                if (items.ListItemCollectionPosition != null && RowLimit > 0)
-                {
-                    lastPosition = items.ListItemCollectionPosition.PagingInfo;
-                }
-
-                ICollection<TEntity> entities = new Collection<TEntity>();
-
-                if (items.Count > 0)
-                {
-                    foreach (var listItem in items.Cast<SPListItem>().ToList())
-                    {
-                        var entity = (TEntity) Activator.CreateInstance(typeof(TEntity));
-                        SetProperties(entity, listItem);
-                        entities.Add(entity);
-                    }
-                }
-
-                return entities;
-            }
-
         }
 
         protected void Update(Fields<TEntity> fields)
@@ -250,7 +206,48 @@ namespace TITcs.SharePoint.SSOM
             return type.GetProperties().Single(p => p.Name == columnName).GetCustomAttribute<SharePointFieldAttribute>().Name;
         }
 
-        //public ICollection<TEntity> GetAll(string camlQuery, uint pageIndex, uint pageSize, string lastPosition)
+        public SharePointPagedData<TEntity> GetAll(string lastPosition, string camlQuery = null, uint pageSize = 0)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetAll", "Query = {0}", camlQuery);
+
+            var result = Call(() =>
+            {
+                using (_rootWeb)
+                {
+                    _rootWeb.CacheAllSchema = false;
+
+                    var list = getList();
+
+                    SPQuery query = new SPQuery
+                    {
+                        RowLimit = pageSize > 0 ? pageSize : 10
+                    };
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    if (!string.IsNullOrEmpty(lastPosition))
+                    {
+                        var pos = new SPListItemCollectionPosition(lastPosition);
+                        query.ListItemCollectionPosition = pos;
+                    }
+
+                    SPListItemCollection items = list.GetItems(query);
+
+                    if (items.ListItemCollectionPosition != null && RowLimit > 0)
+                    {
+                        lastPosition = items.ListItemCollectionPosition.PagingInfo;
+                    }
+
+                    var entities = PopulateItems(items);
+
+                    return new SharePointPagedData<TEntity>(entities, lastPosition);
+                }
+            });
+
+            return result;
+        }
+
         public ICollection<TEntity> GetAll(string camlQuery = null)
         {
             Logger.Logger.Debug("SharePointRepository.GetAll", "Query = {0}", camlQuery);
@@ -261,10 +258,7 @@ namespace TITcs.SharePoint.SSOM
                 {
                     _rootWeb.CacheAllSchema = false;
 
-                    var list = _rootWeb.Lists.TryGetList(Title);
-
-                    if (list == null)
-                        throw new Exception(string.Format("The list \"{0}\" not found", Title));
+                    var list = getList();
 
                     SPQuery query = new SPQuery();
 
@@ -274,36 +268,31 @@ namespace TITcs.SharePoint.SSOM
                     if (!string.IsNullOrEmpty(camlQuery))
                         query.Query = camlQuery;
 
-                    //if (!string.IsNullOrEmpty(LastPosition))
-                    //{
-                    //    var pos = new SPListItemCollectionPosition(LastPosition);
-                    //    query.ListItemCollectionPosition = pos;
-                    //}
-
                     SPListItemCollection items = list.GetItems(query);
 
-                    //if (items.ListItemCollectionPosition != null && RowLimit > 0)
-                    //{
-                    //    LastPosition = items.ListItemCollectionPosition.PagingInfo;
-                    //}
-
-                    ICollection<TEntity> entities = new Collection<TEntity>();
-
-                    if (items.Count > 0)
-                    {
-                        foreach (var listItem in items.Cast<SPListItem>().ToList())
-                        {
-                            var entity = (TEntity)Activator.CreateInstance(typeof(TEntity));
-                            SetProperties(entity, listItem);
-                            entities.Add(entity);
-                        }
-                    }
+                    var entities = PopulateItems(items);
 
                     return entities;
                 }
             });
 
             return result;
+        }
+
+        private ICollection<TEntity> PopulateItems(SPListItemCollection items)
+        {
+            ICollection<TEntity> entities = new Collection<TEntity>();
+
+            if (items.Count > 0)
+            {
+                foreach (var listItem in items.Cast<SPListItem>().ToList())
+                {
+                    var entity = (TEntity)Activator.CreateInstance(typeof(TEntity));
+                    SetProperties(entity, listItem);
+                    entities.Add(entity);
+                }
+            }
+            return entities;
         }
 
         private void SetProperties(TEntity entity, SPListItem listItem)
