@@ -5,3 +5,7 @@ Framework for SharePoint Server Context
 [![Nuget count](http://img.shields.io/nuget/v/TITcs.SharePoint.SSOM.svg)](http://www.nuget.org/packages/TITcs.SharePoint.SSOM/)
 
 
+Development Guide
+=================
+
+Configuration
