@@ -227,15 +227,19 @@ namespace TITcs.SharePoint.SSOM
 
                     var totalItems = items.Count;
 
+                    query = new SPQuery()
+                    {
+                        RowLimit = RowLimit
+                    };
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
                     if (!string.IsNullOrEmpty(lastPosition))
                     {
                         var pos = new SPListItemCollectionPosition(lastPosition);
                         query.ListItemCollectionPosition = pos;
-
-                        
                     }
-
-                    query.RowLimit = RowLimit;
 
                     items = list.GetItems(query);
 
