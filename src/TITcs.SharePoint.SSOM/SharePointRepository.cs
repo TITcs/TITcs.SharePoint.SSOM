@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using TITcs.SharePoint.SSOM.Utils;
 
 namespace TITcs.SharePoint.SSOM
 {
@@ -152,12 +153,7 @@ namespace TITcs.SharePoint.SSOM
 
         private SPList getList()
         {
-            var list = _rootWeb.Lists.TryGetList(Title);
-
-            if (list == null)
-                throw new Exception(string.Format("The list \"{0}\" not found", Title));
-
-            return list;
+            return ListUtils.GetList(_rootWeb, Title);
         }
 
         protected void Update(Fields<TEntity> fields)

@@ -113,6 +113,7 @@
     <Compile Include="Utils\EventReceiverUtils.cs" />
     <Compile Include="Utils\FeatureUtils.cs" />
     <Compile Include="Utils\FileUtils.cs" />
+    <Compile Include="Utils\LikesColumn.cs" />
     <Compile Include="Utils\ListUtils.cs" />
     <Compile Include="Utils\MailUtils.cs" />
     <Compile Include="Utils\MethodUtils.cs" />
