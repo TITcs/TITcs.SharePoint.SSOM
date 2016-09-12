@@ -213,5 +213,21 @@ namespace TITcs.SharePoint.SSOM.Utils
                 }
             });
         }
+
+        /// <summary>
+        /// Return a list instance 
+        /// </summary>
+        /// <param name="web">Context web</param>
+        /// <param name="title">List title</param>
+        /// <returns></returns>
+        public static SPList GetList(SPWeb web, string title)
+        {
+            var list = web.Lists.TryGetList(title);
+
+            if (list == null)
+                throw new Exception(string.Format("The list \"{0}\" not found", title));
+
+            return list;
+        }
     }
 }
