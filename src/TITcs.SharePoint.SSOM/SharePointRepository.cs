@@ -356,11 +356,18 @@ namespace TITcs.SharePoint.SSOM
             switch (field.Type)
             {
                 case SPFieldType.Invalid:
+
                     var imageField = value as Microsoft.SharePoint.Publishing.Fields.ImageFieldValue;
+
                     if (imageField != null)
                     {
                         return imageField.ImageUrl;
                     }
+                    if (value is double)
+                    {
+                        return (double)value;
+                    }
+
                     break;
                 case SPFieldType.Integer:
                     {
