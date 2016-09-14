@@ -88,6 +88,7 @@
     <Compile Include="Fields.cs" />
     <Compile Include="File.cs" />
     <Compile Include="ISharePointItem.cs" />
+    <Compile Include="ISharePointRepository.cs" />
     <Compile Include="Logger\LoggerCategory.cs" />
     <Compile Include="Logger\Logger.cs" />
     <Compile Include="Lookup.cs" />
