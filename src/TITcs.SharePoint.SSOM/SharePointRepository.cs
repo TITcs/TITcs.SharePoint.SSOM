@@ -34,6 +34,7 @@ namespace TITcs.SharePoint.SSOM
         }
 
         public string Title { get; set; }
+        public SPWeb Context  { get; set; }
 
         protected TResult Call<TResult>(Func<TResult> method)
         {
@@ -105,7 +106,7 @@ namespace TITcs.SharePoint.SSOM
             {
                 using (_rootWeb)
                 {
-                    var list = getList();
+                    var list = GetSourceList();
 
                     SPListItem newitem = list.AddItem();
 
@@ -151,7 +152,7 @@ namespace TITcs.SharePoint.SSOM
             });
         }
 
-        private SPList getList()
+        protected SPList GetSourceList()
         {
             return ListUtils.GetList(_rootWeb, Title);
         }
@@ -174,7 +175,7 @@ namespace TITcs.SharePoint.SSOM
             {
                 using (_rootWeb)
                 {
-                    var list = getList();
+                    var list = GetSourceList();
 
                     bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
                     _rootWeb.AllowUnsafeUpdates = true;
@@ -212,7 +213,7 @@ namespace TITcs.SharePoint.SSOM
                 {
                     _rootWeb.CacheAllSchema = false;
 
-                    var list = getList();
+                    var list = GetSourceList();
 
                     SPQuery query = new SPQuery();
 
@@ -263,7 +264,7 @@ namespace TITcs.SharePoint.SSOM
                 {
                     _rootWeb.CacheAllSchema = false;
 
-                    var list = getList();
+                    var list = GetSourceList();
 
                     SPQuery query = new SPQuery();
 
@@ -582,7 +583,7 @@ namespace TITcs.SharePoint.SSOM
             {
                 using (_rootWeb)
                 {
-                    var list = getList();
+                    var list = GetSourceList();
 
                     bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
                     _rootWeb.AllowUnsafeUpdates = true;
@@ -615,7 +616,7 @@ namespace TITcs.SharePoint.SSOM
             {
                 using (_rootWeb)
                 {
-                    var list = getList();
+                    var list = GetSourceList();
 
                     var fileRef = string.Format("{0}/{1}", list.RootFolder.ServerRelativeUrl, fileName);
 
