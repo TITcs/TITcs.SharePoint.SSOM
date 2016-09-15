@@ -14,9 +14,6 @@ namespace TITcs.SharePoint.SSOM
     {
         private readonly SPWeb _rootWeb;
 
-        public uint RowLimit { get; set; }
-        //public string LastPosition { get; set; }
-
         protected SharePointRepository()
             :this(SPContext.Current.Web)
         {
@@ -34,7 +31,8 @@ namespace TITcs.SharePoint.SSOM
         }
 
         public string Title { get; set; }
-        public SPWeb Context  { get; set; }
+        public uint RowLimit { get; set; }
+        public SPWeb Context  { get { return _rootWeb; } }
 
         protected TResult Call<TResult>(Func<TResult> method)
         {

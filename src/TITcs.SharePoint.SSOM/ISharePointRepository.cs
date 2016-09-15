@@ -7,7 +7,7 @@ namespace TITcs.SharePoint.SSOM
     {
         uint RowLimit { get; set; }
         string Title { get; set; }
-        SPWeb Context { get; set; }
+        SPWeb Context { get; }
         TEntity GetById(int id);
         SharePointPagedData<TEntity> GetAll(string lastPosition, string camlQuery = null);
         ICollection<TEntity> GetAll(string camlQuery = null);
