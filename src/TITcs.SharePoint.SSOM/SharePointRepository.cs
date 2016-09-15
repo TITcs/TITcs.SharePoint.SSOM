@@ -10,7 +10,7 @@ using TITcs.SharePoint.SSOM.Utils;
 
 namespace TITcs.SharePoint.SSOM
 {
-    public abstract class SharePointRepository<TEntity> where TEntity : class
+    public abstract class SharePointRepository<TEntity> : ISharePointRepository<TEntity> where TEntity : class
     {
         private readonly SPWeb _rootWeb;
 
@@ -654,4 +654,5 @@ namespace TITcs.SharePoint.SSOM
             return (bytes / 1024f) / 1024f;
         }
     }
+
 }
