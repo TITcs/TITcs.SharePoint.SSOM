@@ -26,21 +26,68 @@ namespace TITcs.SharePoint.SSOM.Utils
         {
             try
             {
-                SPFieldUserValueCollection likedBy = new SPFieldUserValueCollection(web, listItem["LikedBy"].ToString());
+                SPFieldUserValueCollection likedBy;
 
-                SPFieldUserValue newUser = new SPFieldUserValue(web, user.ID, user.Name);
+                if (listItem["LikedBy"] != null)
+                {
+                    likedBy = new SPFieldUserValueCollection(web, Convert.ToString(listItem["LikedBy"].ToString()));
+                }
+                else
+                {
+                    likedBy = new SPFieldUserValueCollection();
+                }
 
-                likedBy.Add(newUser);
+                var fieldUserValue = new SPFieldUserValue(web, user.ID, user.Name);
 
-                int likes = likedBy.Distinct().Count();
+                var liked = likedBy.Any(a => a.User.LoginName.Equals(user.LoginName));
 
-                listItem["LikesCount"] = likes;
-                listItem["LikedBy"] = likedBy;
-                listItem.SystemUpdate(false);
+                if (!liked)
+                {
+                    int likes = likedBy.Distinct().Count();
+
+                    likedBy.Add(fieldUserValue);
+                    likes = likes + 1;
+
+                    listItem["LikesCount"] = likes;
+                    listItem["LikedBy"] = likedBy;
+
+                    listItem.SystemUpdate(false);
+                }
             }
             catch (Exception e)
             {
-                Logger.Logger.Unexpected("LikesColumn.GetCountLikeItem", e.Message);
+                Logger.Logger.Unexpected("LikesColumn.Like", e.Message);
+                throw e;
+            }
+        }
+
+        public static void UnLike(SPWeb web, SPUser user, SPListItem listItem)
+        {
+            try
+            {
+                if (listItem["LikedBy"] != null)
+                {
+                    var likedBy = new SPFieldUserValueCollection(web, listItem["LikedBy"].ToString());
+
+                    if (likedBy.Any(f => f.LookupId == user.ID))
+                    {
+                        var deleteUser = likedBy.First(f => f.LookupId == user.ID);
+
+                        int likes = likedBy.Distinct().Count();
+
+                        likedBy.Remove(deleteUser);
+                        likes = likes - 1;
+                        listItem["LikesCount"] = likes;
+                        listItem["LikedBy"] = likedBy;
+
+                        listItem.SystemUpdate(false);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Logger.Unexpected("LikesColumn.UnLike", e.Message);
+                throw e;
             }
         }
     }
