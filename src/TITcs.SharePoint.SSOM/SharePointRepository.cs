@@ -32,7 +32,7 @@ namespace TITcs.SharePoint.SSOM
 
         public string Title { get; set; }
         public uint RowLimit { get; set; }
-        public SPWeb Context  { get { return _rootWeb; } }
+        public SPWeb Context => _rootWeb;
 
         protected TResult Call<TResult>(Func<TResult> method)
         {
@@ -71,11 +71,11 @@ namespace TITcs.SharePoint.SSOM
                     var list = _rootWeb.Lists.TryGetList(Title);
 
                     if (list == null)
-                        throw new Exception(string.Format("The list \"{0}\" not found", Title));
+                        throw new Exception($"The list \"{Title}\" not found");
 
                     SPQuery query = new SPQuery
                     {
-                        Query = string.Format("<Where><Eq><FieldRef Name='ID' /><Value Type='Counter'>{0}</Value></Eq></Where>", id)
+                        Query = $"<Where><Eq><FieldRef Name='ID' /><Value Type='Counter'>{id}</Value></Eq></Where>"
                     };
 
                     SPListItemCollection items = list.GetItems(query);
@@ -90,6 +90,33 @@ namespace TITcs.SharePoint.SSOM
 
                         return entity;
                     }
+                }
+            });
+
+            return result;
+        }
+
+        public SPListItem GetSPListItem(int id)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetSPListItem", "ID = {0}", id);
+
+            SPListItem result = Call(() =>
+            {
+                using (_rootWeb)
+                {
+                    var list = _rootWeb.Lists.TryGetList(Title);
+
+                    if (list == null)
+                        throw new Exception($"The list \"{Title}\" not found");
+
+                    SPQuery query = new SPQuery
+                    {
+                        Query = $"<Where><Eq><FieldRef Name='ID' /><Value Type='Counter'>{id}</Value></Eq></Where>"
+                    };
+
+                    SPListItemCollection items = list.GetItems(query);
+
+                    return items.Cast<SPListItem>().SingleOrDefault();
                 }
             });
 
@@ -157,7 +184,7 @@ namespace TITcs.SharePoint.SSOM
 
         protected void Update(Fields<TEntity> fields)
         {
-            Logger.Logger.Information("SharePointRepository<TEntity>.Update", string.Format("List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
+            Logger.Logger.Information("SharePointRepository<TEntity>.Update", "List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => $"{i.Key} = {i.Value}")).ToArray());
 
             if (!fields.ItemDictionary.ContainsKey("Id"))
                 throw new ArgumentException("Can not update the item without the Id field");
