@@ -87,6 +87,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Fields.cs" />
     <Compile Include="File.cs" />
+    <Compile Include="ISharePointContext.cs" />
     <Compile Include="ISharePointItem.cs" />
     <Compile Include="ISharePointRepository.cs" />
     <Compile Include="Logger\LoggerCategory.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Services\ServiceBase.cs" />
     <Compile Include="Services\ServiceContext.cs" />
     <Compile Include="Services\SharePointServiceSection.cs" />
+    <Compile Include="SharePointContext.cs" />
     <Compile Include="SharePointFieldAttribute.cs" />
     <Compile Include="SharePointItem.cs" />
     <Compile Include="SharePointListAttribute.cs" />
