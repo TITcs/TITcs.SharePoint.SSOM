@@ -114,6 +114,7 @@
     <Compile Include="Group.cs" />
     <Compile Include="Utils\AppSettingsUtils.cs" />
     <Compile Include="Utils\CacheUtils.cs" />
+    <Compile Include="Utils\ChoiceColumn.cs" />
     <Compile Include="Utils\EventReceiverUtils.cs" />
     <Compile Include="Utils\FeatureUtils.cs" />
     <Compile Include="Utils\FileUtils.cs" />
