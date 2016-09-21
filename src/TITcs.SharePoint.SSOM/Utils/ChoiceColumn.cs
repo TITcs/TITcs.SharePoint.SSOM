@@ -4,14 +4,16 @@ namespace TITcs.SharePoint.SSOM.Utils
 {
     public static class ChoiceColumn
     {
+        public static void AddItem(SPWeb web, string listTitle, string fieldName, string item)
+        {
+            AddItem(web, listTitle, fieldName, new[] {item});
+            ;
+        }
+
         /// <summary>
         /// Add a new item to choice field.
         /// </summary>
-        /// <param name="web">Context web</param>
-        /// <param name="listTitle">Name to list.</param>
-        /// <param name="fieldName">Name to field (type choice)</param>
-        /// <param name="item">Text to new item to add</param>
-        public static void AddItem(SPWeb web, string listTitle, string fieldName, string item)
+        public static void AddItem(SPWeb web, string listTitle, string fieldName, string[] items)
         {
             var list = ListUtils.GetList(web, listTitle);
 
@@ -19,8 +21,11 @@ namespace TITcs.SharePoint.SSOM.Utils
             {
                 SPFieldChoice chFldGender = (SPFieldChoice)list.Fields[fieldName];
 
-                if (!chFldGender.Choices.Contains(item))
-                    chFldGender.Choices.Add(item);
+                foreach (var item in items)
+                {
+                    if (!chFldGender.Choices.Contains(item))
+                        chFldGender.Choices.Add(item);
+                }
 
                 chFldGender.Update();
 
