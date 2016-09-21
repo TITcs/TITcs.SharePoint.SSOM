@@ -12,10 +12,14 @@ namespace TITcs.SharePoint.SSOM
 {
     public abstract class SharePointRepository<TEntity> : ISharePointRepository<TEntity> where TEntity : class
     {
-        private readonly SPWeb _rootWeb;
+        #region properties and fields
 
+        private readonly SPWeb _rootWeb;
+        public string Title { get; set; }
+        public SPWeb Context { get; set; }
         public uint RowLimit { get; set; }
-        //public string LastPosition { get; set; }
+
+        #endregion
 
         protected SharePointRepository()
             :this(SPContext.Current.Web)
@@ -31,10 +35,7 @@ namespace TITcs.SharePoint.SSOM
             RowLimit = 0;
 
             Logger.Logger.Debug("SharePointRepository.Constructor", "Title = {0}", Title);
-        }
-
-        public string Title { get; set; }
-        public SPWeb Context  { get; set; }
+        }        
 
         protected TResult Call<TResult>(Func<TResult> method)
         {
