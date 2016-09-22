@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.SharePoint;
 using Newtonsoft.Json;
@@ -13,6 +14,9 @@ namespace TITcs.SharePoint.SSOM
         public string Id { get; set; }
         [JsonProperty("login")]
         public string Login { get; set; }
+        [JsonProperty("email")]
+        public string Email { get; set; }
+
         [JsonIgnore]
         public string Claims { get; set; }
         [JsonIgnore]

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace TITcs.SharePoint.SSOM
 {
@@ -8,5 +9,8 @@ namespace TITcs.SharePoint.SSOM
         public string Id { get; set; }
         [JsonProperty("name")]
         public string Name { get; set; }
+
+        [JsonIgnore]
+        public ICollection<User> Users { get; set; }
     }
 }
