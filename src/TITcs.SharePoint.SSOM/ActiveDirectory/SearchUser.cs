@@ -24,13 +24,13 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
 
                     var principalSearcher = new PrincipalSearcher(userPrincipal);
 
-                    foreach (var result in principalSearcher.FindAll())
+                    foreach (var principal in principalSearcher.FindAll())
                     {
-                        if (result is UserPrincipal)
+                        if (principal is UserPrincipal)
                         {
-                            var foundUserPrincipal = (UserPrincipal) result;
+                            var userPrincipal1 = (UserPrincipal) principal;
 
-                            var user = bindUser(foundUserPrincipal);
+                            var user = bindUser(userPrincipal1);
 
                             return user;
                         }
@@ -51,13 +51,13 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
 
                     var principalSearcher = new PrincipalSearcher(userPrincipal);
 
-                    foreach (var result in principalSearcher.FindAll())
+                    foreach (var principal in principalSearcher.FindAll())
                     {
-                        if (result is UserPrincipal)
+                        if (principal is UserPrincipal)
                         {
-                            var foundUserPrincipal = (UserPrincipal)result;
+                            var userPrincipal1 = (UserPrincipal)principal;
 
-                            var user = bindUser(foundUserPrincipal);
+                            var user = bindUser(userPrincipal1);
 
                             return user;
                         }
@@ -93,15 +93,15 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
                 {
                     PrincipalSearcher principalSearcher = new PrincipalSearcher(groupPrincipal);
 
-                    var result = principalSearcher.FindAll().SingleOrDefault(i => i.Name == name);
+                    var principal = principalSearcher.FindAll().SingleOrDefault(i => i.Name == name);
 
-                    var foundGroupPrincipal = (GroupPrincipal) result;
+                    var groupPrincipal1 = (GroupPrincipal) principal;
 
                     var group = new Group()
                     {
-                        Id = foundGroupPrincipal.Guid.ToString(),
-                        Name = foundGroupPrincipal.Name,
-                        Users = getUsers(foundGroupPrincipal.Members)
+                        Id = groupPrincipal1.Guid.ToString(),
+                        Name = groupPrincipal1.Name,
+                        Users = getUsers(groupPrincipal1.Members)
                     };
 
                     return group;
