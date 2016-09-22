@@ -22,6 +22,11 @@ namespace TITcs.SharePoint.SSOM.Utils
             return Send(null, to, subject, body, attachments, null);
         }
 
+        public static bool Send(string from, string to, string subject, string body)
+        {
+            return Send(from, to, subject, body, new List<Attachment>(), null);
+        }
+
         public static bool Send(string from, string to, string subject, string body, IList<Attachment> attachments, NetworkCredential networkCredential)
         {
             string stmpServer = SPAdministrationWebApplication.Local.OutboundMailServiceInstance.Server.Address;

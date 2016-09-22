@@ -8,8 +8,13 @@ namespace TITcs.SharePoint.SSOM.Test
     [SharePointList("Teste")]
     public class SitePagesRepository : SharePointRepository<Item>
     {
-        public SitePagesRepository(SPWeb rootWeb)
-            : base(rootWeb)
+        public SitePagesRepository(SPWeb spWeb)
+            : base(spWeb)
+        {
+        }
+
+        public SitePagesRepository(ISharePointContext context)
+            : base(context)
         {
         }
 
