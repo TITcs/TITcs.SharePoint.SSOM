@@ -18,13 +18,38 @@ namespace TITcs.SharePoint.SSOM.Test
         {
             var search = new Search(new []
             {
-                new PrincipalContext(ContextType.Domain, "df.titcs.local", "OU=Funcionários,OU=Usuários,DC=df,DC=titcs,DC=local", "devsp.admin", "P@ssw0rd4Dev") 
+                new PrincipalContext(ContextType.Domain) 
             });
-
 
             var user = search.GetUser("stiven.camara");
 
             Assert.IsTrue(user != null);
+        }
+
+        [TestMethod]
+        public void GetUserByDisplayName()
+        {
+            var search = new Search(new[]
+            {
+                new PrincipalContext(ContextType.Domain)
+            });
+
+            var user = search.GetUserByDisplayName("Raul Fuentes");
+
+            Assert.IsTrue(user != null);
+        }
+
+        [TestMethod]
+        public void GetGroup()
+        {
+            var search = new Search(new[]
+            {
+                new PrincipalContext(ContextType.Domain)
+            });
+
+            var group = search.GetGroup("Administrators");
+
+            Assert.IsTrue(group != null);
         }
     }
 }

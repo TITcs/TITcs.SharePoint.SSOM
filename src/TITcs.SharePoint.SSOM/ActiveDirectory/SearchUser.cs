@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.DirectoryServices.AccountManagement;
 using System.Linq;
 
@@ -19,8 +20,7 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
             {
                 using (UserPrincipal userPrincipal = new UserPrincipal(context))
                 {
-                    if (!string.IsNullOrEmpty(loginName))
-                        userPrincipal.SamAccountName = loginName;
+                    userPrincipal.SamAccountName = loginName;
 
                     var principalSearcher = new PrincipalSearcher(userPrincipal);
 
@@ -30,18 +30,7 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
                         {
                             var foundUserPrincipal = (UserPrincipal) found;
 
-                            var user = new User()
-                            {
-                                Id = foundUserPrincipal.Guid.ToString(),
-                                Email = foundUserPrincipal.EmailAddress,
-                                Name = foundUserPrincipal.Name,
-                                Login = foundUserPrincipal.SamAccountName,
-                                Groups = foundUserPrincipal.GetAuthorizationGroups().Select(i => new Group()
-                                {
-                                    Name = i.Name,
-                                    Id = i.Guid.ToString()
-                                }).ToArray()
-                            };
+                            var user = bindUser(foundUserPrincipal);
 
                             return user;
                         }
@@ -52,9 +41,91 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
             return null;
         }
 
+        public User GetUserByDisplayName(string displayName)
+        {
+            foreach (var context in _contexts)
+            {
+                using (UserPrincipal userPrincipal = new UserPrincipal(context))
+                {
+                    userPrincipal.DisplayName = displayName;
+
+                    var principalSearcher = new PrincipalSearcher(userPrincipal);
+
+                    foreach (var found in principalSearcher.FindAll())
+                    {
+                        if (found is UserPrincipal)
+                        {
+                            var foundUserPrincipal = (UserPrincipal)found;
+
+                            var user = bindUser(foundUserPrincipal);
+
+                            return user;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static User bindUser(UserPrincipal userPrincipal)
+        {
+            var user = new User()
+            {
+                Id = userPrincipal.Guid.ToString(),
+                Email = userPrincipal.EmailAddress,
+                Name = userPrincipal.Name,
+                Login = userPrincipal.SamAccountName,
+                Groups = userPrincipal.GetAuthorizationGroups().Select(i => new Group()
+                {
+                    Name = i.Name,
+                    Id = i.Guid.ToString()
+                }).ToArray()
+            };
+            return user;
+        }
+
         public Group GetGroup(string name)
         {
-            throw new NotImplementedException();
+            foreach (var context in _contexts)
+            {
+                using (GroupPrincipal groupPrincipal = new GroupPrincipal(context))
+                {
+                    PrincipalSearcher principalSearcher = new PrincipalSearcher(groupPrincipal);
+
+                    var found = principalSearcher.FindAll().SingleOrDefault(i => i.Name == name);
+
+                    var foundGroupPrincipal = (GroupPrincipal) found;
+
+                    var group = new Group()
+                    {
+                        Id = foundGroupPrincipal.Guid.ToString(),
+                        Name = foundGroupPrincipal.Name,
+                        Users = getUsers(foundGroupPrincipal.Members)
+                    };
+
+                    return group;
+                }
+            }
+
+            return null;
         }
+
+        private static ICollection<User> getUsers(PrincipalCollection principalCollection)
+        {
+            var users = new Collection<User>();
+
+            foreach (var principal in principalCollection)
+            {
+                if (principal is UserPrincipal)
+                {
+                    var foundUserPrincipal = (UserPrincipal)principal;
+                    users.Add(bindUser(foundUserPrincipal));
+                }
+            }
+
+            return users;
+        }
+
     }
 }
