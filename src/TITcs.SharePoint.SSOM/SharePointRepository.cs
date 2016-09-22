@@ -12,29 +12,36 @@ namespace TITcs.SharePoint.SSOM
 {
     public abstract class SharePointRepository<TEntity> : ISharePointRepository<TEntity> where TEntity : class
     {
-        private readonly SPWeb _rootWeb;
-
-        public uint RowLimit { get; set; }
-        //public string LastPosition { get; set; }
+        private readonly ISharePointContext _context;
 
         protected SharePointRepository()
             :this(SPContext.Current.Web)
         {
         }
 
-        protected SharePointRepository(SPWeb rootWeb)
+        protected SharePointRepository(ISharePointContext context)
         {
-            _rootWeb = rootWeb;
+            _context = context;
 
             Title = GetListTitle();
+            RowLimit = 0;
 
+            Logger.Logger.Debug("SharePointRepository.Constructor", "Title = {0}", Title);
+        }
+
+        protected SharePointRepository(SPWeb web)
+        {
+            _context = new SharePointContext(web);
+
+            Title = GetListTitle();
             RowLimit = 0;
 
             Logger.Logger.Debug("SharePointRepository.Constructor", "Title = {0}", Title);
         }
 
         public string Title { get; set; }
-        public SPWeb Context  { get; set; }
+        public uint RowLimit { get; set; }
+        public ISharePointContext Context => _context;
 
         protected TResult Call<TResult>(Func<TResult> method)
         {
@@ -68,16 +75,16 @@ namespace TITcs.SharePoint.SSOM
 
             TEntity result = Call(() =>
             {
-                using (_rootWeb)
+                using (_context.Web)
                 {
-                    var list = _rootWeb.Lists.TryGetList(Title);
+                    var list = _context.Web.Lists.TryGetList(Title);
 
                     if (list == null)
-                        throw new Exception(string.Format("The list \"{0}\" not found", Title));
+                        throw new Exception($"The list \"{Title}\" not found");
 
                     SPQuery query = new SPQuery
                     {
-                        Query = string.Format("<Where><Eq><FieldRef Name='ID' /><Value Type='Counter'>{0}</Value></Eq></Where>", id)
+                        Query = $"<Where><Eq><FieldRef Name='ID' /><Value Type='Counter'>{id}</Value></Eq></Where>"
                     };
 
                     SPListItemCollection items = list.GetItems(query);
@@ -98,20 +105,47 @@ namespace TITcs.SharePoint.SSOM
             return result;
         }
 
+        public SPListItem GetSPListItem(int id)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetSPListItem", "ID = {0}", id);
+
+            SPListItem result = Call(() =>
+            {
+                using (_context.Web)
+                {
+                    var list = _context.Web.Lists.TryGetList(Title);
+
+                    if (list == null)
+                        throw new Exception($"The list \"{Title}\" not found");
+
+                    SPQuery query = new SPQuery
+                    {
+                        Query = $"<Where><Eq><FieldRef Name='ID' /><Value Type='Counter'>{id}</Value></Eq></Where>"
+                    };
+
+                    SPListItemCollection items = list.GetItems(query);
+
+                    return items.Cast<SPListItem>().SingleOrDefault();
+                }
+            });
+
+            return result;
+        }
+
         protected int Insert(Fields<TEntity> fields)
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Insert", string.Format("List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
 
             return Call(() =>
             {
-                using (_rootWeb)
+                using (_context.Web)
                 {
                     var list = GetSourceList();
 
                     SPListItem newitem = list.AddItem();
 
-                    bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
-                    _rootWeb.AllowUnsafeUpdates = true;
+                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = true;
 
                     foreach (var field in fields.ItemDictionary)
                     {
@@ -144,7 +178,7 @@ namespace TITcs.SharePoint.SSOM
 
                     newitem.Update();
 
-                    _rootWeb.AllowUnsafeUpdates = allowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
 
                     return newitem.ID;
                 }
@@ -154,12 +188,12 @@ namespace TITcs.SharePoint.SSOM
 
         protected SPList GetSourceList()
         {
-            return ListUtils.GetList(_rootWeb, Title);
+            return ListUtils.GetList(_context.Web, Title);
         }
 
         protected void Update(Fields<TEntity> fields)
         {
-            Logger.Logger.Information("SharePointRepository<TEntity>.Update", string.Format("List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
+            Logger.Logger.Information("SharePointRepository<TEntity>.Update", "List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => $"{i.Key} = {i.Value}")).ToArray());
 
             if (!fields.ItemDictionary.ContainsKey("Id"))
                 throw new ArgumentException("Can not update the item without the Id field");
@@ -173,12 +207,12 @@ namespace TITcs.SharePoint.SSOM
 
             Exec(() =>
             {
-                using (_rootWeb)
+                using (_context.Web)
                 {
                     var list = GetSourceList();
 
-                    bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
-                    _rootWeb.AllowUnsafeUpdates = true;
+                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = true;
 
                     var item = list.GetItemById(id);
 
@@ -192,7 +226,7 @@ namespace TITcs.SharePoint.SSOM
 
                     item.Update();
 
-                    _rootWeb.AllowUnsafeUpdates = allowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
                 }
 
             });
@@ -209,9 +243,9 @@ namespace TITcs.SharePoint.SSOM
 
             var result = Call(() =>
             {
-                using (_rootWeb)
+                using (_context.Web)
                 {
-                    _rootWeb.CacheAllSchema = false;
+                    _context.Web.CacheAllSchema = false;
 
                     var list = GetSourceList();
 
@@ -260,9 +294,9 @@ namespace TITcs.SharePoint.SSOM
 
             ICollection<TEntity> result = Call(() =>
             {
-                using (_rootWeb)
+                using (_context.Web)
                 {
-                    _rootWeb.CacheAllSchema = false;
+                    _context.Web.CacheAllSchema = false;
 
                     var list = GetSourceList();
 
@@ -581,18 +615,18 @@ namespace TITcs.SharePoint.SSOM
 
             Exec(() =>
             {
-                using (_rootWeb)
+                using (_context.Web)
                 {
                     var list = GetSourceList();
 
-                    bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
-                    _rootWeb.AllowUnsafeUpdates = true;
+                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = true;
 
                     var item = list.GetItemById(id);
 
                     item.Delete();
 
-                    _rootWeb.AllowUnsafeUpdates = allowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
                 }
             });
         }
@@ -614,14 +648,14 @@ namespace TITcs.SharePoint.SSOM
 
             return Call(() =>
             {
-                using (_rootWeb)
+                using (_context.Web)
                 {
                     var list = GetSourceList();
 
                     var fileRef = string.Format("{0}/{1}", list.RootFolder.ServerRelativeUrl, fileName);
 
-                    bool allowUnsafeUpdates = _rootWeb.AllowUnsafeUpdates;
-                    _rootWeb.AllowUnsafeUpdates = true;
+                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = true;
 
                     var file = list.RootFolder.Files.Add(fileRef, stream, true);
 
@@ -635,7 +669,7 @@ namespace TITcs.SharePoint.SSOM
 
                     }
 
-                    _rootWeb.AllowUnsafeUpdates = allowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
 
                     return new File
                     {
