@@ -24,11 +24,11 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
 
                     var principalSearcher = new PrincipalSearcher(userPrincipal);
 
-                    foreach (var found in principalSearcher.FindAll())
+                    foreach (var result in principalSearcher.FindAll())
                     {
-                        if (found is UserPrincipal)
+                        if (result is UserPrincipal)
                         {
-                            var foundUserPrincipal = (UserPrincipal) found;
+                            var foundUserPrincipal = (UserPrincipal) result;
 
                             var user = bindUser(foundUserPrincipal);
 
@@ -51,11 +51,11 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
 
                     var principalSearcher = new PrincipalSearcher(userPrincipal);
 
-                    foreach (var found in principalSearcher.FindAll())
+                    foreach (var result in principalSearcher.FindAll())
                     {
-                        if (found is UserPrincipal)
+                        if (result is UserPrincipal)
                         {
-                            var foundUserPrincipal = (UserPrincipal)found;
+                            var foundUserPrincipal = (UserPrincipal)result;
 
                             var user = bindUser(foundUserPrincipal);
 
@@ -93,9 +93,9 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
                 {
                     PrincipalSearcher principalSearcher = new PrincipalSearcher(groupPrincipal);
 
-                    var found = principalSearcher.FindAll().SingleOrDefault(i => i.Name == name);
+                    var result = principalSearcher.FindAll().SingleOrDefault(i => i.Name == name);
 
-                    var foundGroupPrincipal = (GroupPrincipal) found;
+                    var foundGroupPrincipal = (GroupPrincipal) result;
 
                     var group = new Group()
                     {
