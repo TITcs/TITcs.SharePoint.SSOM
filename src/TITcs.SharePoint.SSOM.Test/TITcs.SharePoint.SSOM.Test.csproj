@@ -74,6 +74,8 @@
   <ItemGroup>
     <Compile Include="Item.cs" />
     <Compile Include="SearchUserTest.cs" />
+    <Compile Include="PagingTest.cs" />
+    <Compile Include="ProjetosRepository.cs" />
     <Compile Include="SitePagesTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SitePagesRespository.cs" />
