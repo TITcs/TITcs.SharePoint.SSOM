@@ -73,12 +73,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Item.cs" />
-<<<<<<< HEAD
     <Compile Include="SearchUserTest.cs" />
-=======
     <Compile Include="PagingTest.cs" />
     <Compile Include="ProjetosRepository.cs" />
->>>>>>> paginacao-27
     <Compile Include="SitePagesTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SitePagesRespository.cs" />

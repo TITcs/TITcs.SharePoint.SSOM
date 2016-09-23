@@ -13,20 +13,16 @@ namespace TITcs.SharePoint.SSOM
 {
     public abstract class SharePointRepository<TEntity> : ISharePointRepository<TEntity> where TEntity : SharePointItem
     {
-<<<<<<< HEAD
-        private readonly ISharePointContext _context;
-=======
         #region properties and fields
 
-        private readonly SPWeb _rootWeb;
+        private readonly ISharePointContext _context;
+        public ISharePointContext Context => _context;
         public string Title { get; set; }
-        public SPWeb Context { get; set; }
         public uint RowLimit { get; set; }
 
         #endregion
 
         #region constructors
->>>>>>> paginacao-27
 
         protected SharePointRepository()
             :this(SPContext.Current.Web)
@@ -51,17 +47,11 @@ namespace TITcs.SharePoint.SSOM
             RowLimit = 0;
 
             Logger.Logger.Debug("SharePointRepository.Constructor", "Title = {0}", Title);
-        }
-
-<<<<<<< HEAD
-        public string Title { get; set; }
-        public uint RowLimit { get; set; }
-        public ISharePointContext Context => _context;
-=======
+        }    
+        
         #endregion
 
         #region methods
->>>>>>> paginacao-27
 
         protected TResult Call<TResult>(Func<TResult> method)
         {
