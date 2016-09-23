@@ -29,14 +29,14 @@ namespace TITcs.SharePoint.SSOM.Utils
 
         public static bool Send(string from, string to, string subject, string body, IList<Attachment> attachments, NetworkCredential networkCredential)
         {
-            string stmpServer = SPAdministrationWebApplication.Local.OutboundMailServiceInstance.Server.Address;
-            string stmpFrom = SPAdministrationWebApplication.Local.OutboundMailSenderAddress;
-
-            if (string.IsNullOrEmpty(from))
-                from = stmpFrom;
-
             try
             {
+                string stmpServer = SPAdministrationWebApplication.Local.OutboundMailServiceInstance.Server.Address;
+                string stmpFrom = SPAdministrationWebApplication.Local.OutboundMailSenderAddress;
+
+                if (string.IsNullOrEmpty(from))
+                    from = stmpFrom;
+
                 MailMessage mailMessage = new MailMessage(from, to)
                 {
                     IsBodyHtml = true,
