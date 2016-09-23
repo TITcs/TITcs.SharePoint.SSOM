@@ -3,13 +3,13 @@ using Microsoft.SharePoint;
 
 namespace TITcs.SharePoint.SSOM
 {
-    public interface ISharePointRepository<TEntity> where TEntity : class
+    public interface ISharePointRepository<TEntity> where TEntity : SharePointItem
     {
         uint RowLimit { get; set; }
         string Title { get; set; }
         SPWeb Context { get; set; }
         TEntity GetById(int id);
-        SharePointPagedData<TEntity> GetAll(string lastPosition, string camlQuery = null);
+        SharePointPagedData<TEntity> GetAll(string pagingInfo, uint pageSize, string camlQuery = null);
         ICollection<TEntity> GetAll(string camlQuery = null);
     }
 }

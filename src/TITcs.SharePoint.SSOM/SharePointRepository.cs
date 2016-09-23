@@ -6,11 +6,12 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using TITcs.SharePoint.SSOM.Utils;
 
 namespace TITcs.SharePoint.SSOM
 {
-    public abstract class SharePointRepository<TEntity> : ISharePointRepository<TEntity> where TEntity : class
+    public abstract class SharePointRepository<TEntity> : ISharePointRepository<TEntity> where TEntity : SharePointItem
     {
         #region properties and fields
 
@@ -20,6 +21,8 @@ namespace TITcs.SharePoint.SSOM
         public uint RowLimit { get; set; }
 
         #endregion
+
+        #region constructors
 
         protected SharePointRepository()
             :this(SPContext.Current.Web)
@@ -35,7 +38,11 @@ namespace TITcs.SharePoint.SSOM
             RowLimit = 0;
 
             Logger.Logger.Debug("SharePointRepository.Constructor", "Title = {0}", Title);
-        }        
+        }
+
+        #endregion
+
+        #region methods
 
         protected TResult Call<TResult>(Func<TResult> method)
         {
@@ -204,9 +211,9 @@ namespace TITcs.SharePoint.SSOM
             return type.GetProperties().Single(p => p.Name == columnName).GetCustomAttribute<SharePointFieldAttribute>().Name;
         }
 
-        public SharePointPagedData<TEntity> GetAll(string lastPosition, string camlQuery = null)
+        public SharePointPagedData<TEntity> GetAll(string pagingInfo, uint pageSize = 10, string camlQuery = null)
         {
-            Logger.Logger.Debug("SharePointRepository.GetAll", "Lastposition = {0}, Query = {1}", lastPosition, camlQuery);
+            Logger.Logger.Debug("SharePointRepository.GetAll", "PagingInfo = {0}, Query = {1}", pagingInfo, camlQuery);
 
             var result = Call(() =>
             {
@@ -214,16 +221,24 @@ namespace TITcs.SharePoint.SSOM
                 {
                     _rootWeb.CacheAllSchema = false;
 
+                    // access source list
                     var list = GetSourceList();
+                    //var sourcePagingInfo = pagingInfo;
 
-                    SPQuery query = new SPQuery();
+                    // build all items query
+                    var query = new SPQuery();
 
                     if (!string.IsNullOrEmpty(camlQuery))
                         query.Query = camlQuery;
 
                     var items = list.GetItems(query);
-
+                    var originalItems = items;
+                    
+                    // count total items
                     var totalItems = items.Count;
+
+                    // set new row limit
+                    RowLimit = pageSize > totalItems ? (uint)totalItems : pageSize;
 
                     query = new SPQuery()
                     {
@@ -233,22 +248,24 @@ namespace TITcs.SharePoint.SSOM
                     if (!string.IsNullOrEmpty(camlQuery))
                         query.Query = camlQuery;
 
-                    if (!string.IsNullOrEmpty(lastPosition))
+                    // paged search
+                    if (!string.IsNullOrEmpty(pagingInfo))
                     {
-                        var pos = new SPListItemCollectionPosition(lastPosition);
-                        query.ListItemCollectionPosition = pos;
+                        query.ListItemCollectionPosition = new SPListItemCollectionPosition(pagingInfo);
                     }
 
+                    // execute query
                     items = list.GetItems(query);
 
                     if (items.ListItemCollectionPosition != null && RowLimit > 0)
                     {
-                        lastPosition = items.ListItemCollectionPosition.PagingInfo;
+                        pagingInfo = items.ListItemCollectionPosition.PagingInfo;
                     }
 
-                    var entities = PopulateItems(items);
 
-                    return new SharePointPagedData<TEntity>(entities, lastPosition, totalItems);
+                    var entities = PopulateItems(items);                    
+
+                    return new SharePointPagedData<TEntity>(originalItems, entities, pagingInfo, RowLimit);
                 }
             });
 
@@ -655,6 +672,8 @@ namespace TITcs.SharePoint.SSOM
         {
             return (bytes / 1024f) / 1024f;
         }
+
+        #endregion
     }
 
 }
