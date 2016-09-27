@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TITcs.SharePoint.SSOM", "TITcs.SharePoint.SSOM\TITcs.SharePoint.SSOM.csproj", "{ABD9A716-03CE-41A6-8879-C3CC13396A96}"
 EndProject
@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".refs", ".refs", "{4B27C425
 		samples.txt = samples.txt
 		tutorials.txt = tutorials.txt
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TITcs.SharePoint.SSOM.Specs", "TITcs.SharePoint.SSOM.Specs\TITcs.SharePoint.SSOM.Specs.csproj", "{0007F5F6-3F44-4364-AC8F-FAFC6E6570D8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +40,14 @@ Global
 		{530ADEF9-5D8E-4310-87EB-6EEB24B95AF5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{530ADEF9-5D8E-4310-87EB-6EEB24B95AF5}.Release|x64.ActiveCfg = Release|x64
 		{530ADEF9-5D8E-4310-87EB-6EEB24B95AF5}.Release|x64.Build.0 = Release|x64
+		{0007F5F6-3F44-4364-AC8F-FAFC6E6570D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0007F5F6-3F44-4364-AC8F-FAFC6E6570D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0007F5F6-3F44-4364-AC8F-FAFC6E6570D8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0007F5F6-3F44-4364-AC8F-FAFC6E6570D8}.Debug|x64.Build.0 = Debug|Any CPU
+		{0007F5F6-3F44-4364-AC8F-FAFC6E6570D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0007F5F6-3F44-4364-AC8F-FAFC6E6570D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0007F5F6-3F44-4364-AC8F-FAFC6E6570D8}.Release|x64.ActiveCfg = Release|Any CPU
+		{0007F5F6-3F44-4364-AC8F-FAFC6E6570D8}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

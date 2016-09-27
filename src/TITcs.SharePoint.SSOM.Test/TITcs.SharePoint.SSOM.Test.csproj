@@ -73,6 +73,8 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Item.cs" />
+    <Compile Include="MelhoresPraticasComentariosRepository.cs" />
+    <Compile Include="PGCTest.cs" />
     <Compile Include="SearchUserTest.cs" />
     <Compile Include="PagingTest.cs" />
     <Compile Include="ProjetosRepository.cs" />
