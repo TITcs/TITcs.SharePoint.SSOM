@@ -301,9 +301,7 @@ namespace TITcs.SharePoint.SSOM
                         pagingInfo = string.Empty;
                     }
 
-
-                    var entities = PopulateItems(items);
-                    return new SharePointPagedData<TEntity>(originalItems, entities, pagingInfo, RowLimit);
+                    return new SharePointPagedData<TEntity>(originalItems, PopulateItems(items), pagingInfo, RowLimit);
                 }
             });
 

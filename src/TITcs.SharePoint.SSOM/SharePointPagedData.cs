@@ -154,7 +154,6 @@ namespace TITcs.SharePoint.SSOM
 
             return page;
         }
-
         private int GetNumbersOfPage()
         {
             var pagesCount = (double)TotalItems / PageSize;

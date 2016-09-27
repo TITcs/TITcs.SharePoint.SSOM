@@ -77,7 +77,7 @@ namespace TITcs.SharePoint.SSOM.Test
                 using (SPWeb web = site.OpenWeb())
                 {
                     var repo = new ProjetosRepository(web);
-                    Assert.IsTrue(repo.GetAll().Count == 100);
+                    Assert.IsTrue(repo.GetAll().Count == 101);
                 }
             }
         }
@@ -189,11 +189,11 @@ namespace TITcs.SharePoint.SSOM.Test
 
                     var repo = new ProjetosRepository(web);
 
-                    for (int i = 1; i <= 10; i++)
+                    for (int i = 1; i <= 11; i++)
                     {
                         coll = repo.GetAll(pagingInfo, pageSize, camlQuery);
                         pagingInfo = coll.NextPageQuery;
-                        resultado = resultado && string.Compare(coll.CurrentPageSubtitle.ToLower(), string.Format("página {0} de {1}", i, 10)) == 0;
+                        resultado = resultado && string.Compare(coll.CurrentPageSubtitle.ToLower(), string.Format("página {0} de {1}", i, 11)) == 0;
                     }
                     Assert.IsTrue(resultado);
                 }
@@ -206,19 +206,17 @@ namespace TITcs.SharePoint.SSOM.Test
             {
                 using (SPWeb web = site.OpenWeb())
                 {
-                    var pagingInfo = "Paged=TRUE&PagedPrev=TRUE&p_ID=101";
+                    var pagingInfo = "Paged=TRUE&PagedPrev=TRUE&p_ID=107";
                     var pageSize = (uint)10;
                     var camlQuery = string.Empty;
                     SharePointPagedData<Item> coll;
                     var resultado = true;
-
                     var repo = new ProjetosRepository(web);
-
                     for (int i = 10; i >= 1; i--)
                     {
                         coll = repo.GetAll(pagingInfo, pageSize, camlQuery);
                         pagingInfo = coll.PreviousPageQuery;
-                        resultado = resultado && string.Compare(coll.CurrentPageSubtitle.ToLower(), string.Format("página {0} de {1}", i, 10)) == 0;
+                        resultado = resultado && string.Compare(coll.CurrentPageSubtitle.ToLower(), string.Format("página {0} de {1}", i, 11)) == 0;
                     }
                     Assert.IsTrue(resultado);
                 }
@@ -231,15 +229,13 @@ namespace TITcs.SharePoint.SSOM.Test
             {
                 using (SPWeb web = site.OpenWeb())
                 {
-                    var pageCount = 20;
+                    var pageCount = 21;
                     var pagingInfo = string.Empty;
                     var pageSize = (uint)5;
                     var camlQuery = string.Empty;
                     SharePointPagedData<Item> coll;
                     var resultado = true;
-
                     var repo = new ProjetosRepository(web);
-
                     for (int i = 1; i <= pageCount; i++)
                     {
                         coll = repo.GetAll(pagingInfo, pageSize, camlQuery);
@@ -257,16 +253,14 @@ namespace TITcs.SharePoint.SSOM.Test
             {
                 using (SPWeb web = site.OpenWeb())
                 {
-                    var pageCount = 20;
-                    var pagingInfo = "Paged=TRUE&PagedPrev=TRUE&p_ID=101";
+                    var pageCount = 21;
+                    var pagingInfo = "Paged=TRUE&PagedPrev=TRUE&p_ID=106";
                     var pageSize = (uint)5;
                     var camlQuery = string.Empty;
                     SharePointPagedData<Item> coll;
                     var resultado = true;
-
                     var repo = new ProjetosRepository(web);
-
-                    for (int i = pageCount; i >= 1; i--)
+                    for (int i = pageCount - 1; i >= 1; i--)
                     {
                         coll = repo.GetAll(pagingInfo, pageSize, camlQuery);
                         pagingInfo = coll.PreviousPageQuery;
@@ -316,10 +310,10 @@ namespace TITcs.SharePoint.SSOM.Test
                     var pagingInfo = string.Empty;
                     var pageSize = (uint)5;
                     var camlQuery = string.Format(@"
-                                      <OrderBy><FieldRef Name='ID' Ascending='FALSE' /></OrderBy>
+                                      <OrderBy><FieldRef Name='ID' Ascending='TRUE'/></OrderBy>
                                       <Where>
                                         <Gt>
-                                            <FieldRef Name = 'ID'/>
+                                            <FieldRef Name='ID'/>
                                             <Value Type='Number'>{0}</Value>
                                         </Gt>
                                       </Where>", 30);
@@ -330,7 +324,7 @@ namespace TITcs.SharePoint.SSOM.Test
                     {
                         coll = repo.GetAll(pagingInfo, pageSize, camlQuery);
                         pagingInfo = coll.NextPageQuery;
-                        resultado = resultado && string.Compare(coll.NextPageQuery, string.Format("Paged=TRUE&p_ID={0}", 100 - ((i * pageSize) - 1))) == 0;
+                        resultado = resultado && pagingInfo.Contains("Paged=TRUE") && pagingInfo.Contains(string.Format("p_ID={0}", coll.Data.OfType<Item>().ToList<Item>()[coll.Data.Count - 1].Id));
                     }
                     Assert.IsTrue(resultado);
                 }
@@ -360,7 +354,7 @@ namespace TITcs.SharePoint.SSOM.Test
                     {
                         coll = repo.GetAll(pagingInfo, pageSize, camlQuery);
                         pagingInfo = coll.NextPageQuery;
-                        resultado = resultado && string.Compare(coll.CurrentPageSubtitle.ToLower(), string.Format("página {0} de {1}", i, 14)) == 0;
+                        resultado = resultado && string.Compare(coll.CurrentPageSubtitle.ToLower(), string.Format("página {0} de {1}", i, 15)) == 0;
                     }
                     Assert.IsTrue(resultado);
                 }
