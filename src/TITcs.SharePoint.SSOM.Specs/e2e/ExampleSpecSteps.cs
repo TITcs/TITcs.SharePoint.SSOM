@@ -88,7 +88,7 @@ namespace TITcs.SharePoint.SSOM.Specs.e2e
             var _pageSize = 30;          
             var _inputText = _driver.FindElement(By.CssSelector(string.Format("{0} .ms-formbody input", _formTable)));
             _inputText.Click();
-            _inputText.SendKeys("Projeto 101");
+            _inputText.SendKeys("Projeto 107");
             var _saveButton = _driver.FindElement(By.CssSelector(".ms-formtoolbar:nth-child(2) .ms-toolbar:nth-child(2) input[type=\"button\"]"));
             _saveButton.Click();            
             var _trSelectors = string.Format("{0} tbody tr", _listViewClass);

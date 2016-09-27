@@ -70,14 +70,14 @@ namespace TITcs.SharePoint.SSOM.Test
         //    }
         //}
         [TestMethod]
-        public void Deve_Retornar_100_Registros()
+        public void Deve_Retornar_102_Registros()
         {
             using (SPSite site = new SPSite(URL))
             {
                 using (SPWeb web = site.OpenWeb())
                 {
                     var repo = new ProjetosRepository(web);
-                    Assert.IsTrue(repo.GetAll().Count == 101);
+                    Assert.IsTrue(repo.GetAll().Count == 102);
                 }
             }
         }
