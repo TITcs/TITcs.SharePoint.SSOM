@@ -12,8 +12,11 @@ namespace TITcs.SharePoint.SSOM.Specs.e2e
     {
         #region fields and properties
 
-        private string _listViewClass = ".ms-listviewtable";
+        private readonly string _listViewClass = ".ms-listviewtable";
+        private readonly string _newEditTable = "#Hero-WPQ2 .ms-list-addnew";
+        private readonly string _formTable = ".ms-formtable";
         private static readonly string _url = "http://marcos.pacheco:$titcs%402016@dmz-shs-05/";
+        private static WebDriverWait _wait;
         private static IWebDriver _driver;
 
         #endregion
@@ -25,6 +28,8 @@ namespace TITcs.SharePoint.SSOM.Specs.e2e
             _driver = new ChromeDriver() {
                 Url = _url
             };
+            _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            _driver.Manage().Timeouts().ImplicitlyWait(TimeSpan.FromSeconds(5));
         }
 
         [AfterFeature(Order = 0)]
@@ -47,13 +52,11 @@ namespace TITcs.SharePoint.SSOM.Specs.e2e
         {
             var _projectsListUrl = string.Format("{0}_layouts/15/start.aspx#/Lists/Projetos/AllItems.aspx", _url);
             _driver.Navigate().GoToUrl(_projectsListUrl);
-            var _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
             _wait.Until<IWebElement>(w => w.FindElement(By.CssSelector(_listViewClass)));
         }
         [Then(@"I should see the list items paged")]
         public void ThenIShouldSeeTheListItemsPaged()
         {
-            var _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
             _wait.Until<IWebElement>(w => w.FindElement(By.CssSelector(_listViewClass)));
             var _pageSize = 30;
             var _trSelectors = string.Format("{0} tbody tr", _listViewClass);            
@@ -67,10 +70,29 @@ namespace TITcs.SharePoint.SSOM.Specs.e2e
         [Then(@"I see more (.*) results")]
         public void ThenISeeMoreResults(int p0)
         {
-            var _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
             _wait.Until<IWebElement>(w => w.FindElement(By.CssSelector(_listViewClass)));
             var _pageSize = p0;            
             var _trSelectors = string.Format("{0} tbody tr", _listViewClass);
+            Assert.IsTrue(_driver.FindElements(By.CssSelector(_trSelectors)).Count == _pageSize);
+        }
+        [Then(@"I press the new button e insert item data e save")]
+        public void IPressTheNewButtonEInsertItemDataESave()
+        {
+            _wait.Until<IWebElement>(w => w.FindElement(By.CssSelector(_newEditTable)));
+            var _newButton = _driver.FindElement(By.LinkText("new item"));
+            _newButton.Click();
+        }
+        [Then(@"I should see the new item")]
+        public void IShouldSeeTheNewItem()
+        {
+            var _pageSize = 30;          
+            var _inputText = _driver.FindElement(By.CssSelector(string.Format("{0} .ms-formbody input", _formTable)));
+            _inputText.Click();
+            _inputText.SendKeys("Projeto 101");
+            var _saveButton = _driver.FindElement(By.CssSelector(".ms-formtoolbar:nth-child(2) .ms-toolbar:nth-child(2) input[type=\"button\"]"));
+            _saveButton.Click();            
+            var _trSelectors = string.Format("{0} tbody tr", _listViewClass);
+            _wait.Until<IWebElement>(w => w.FindElement(By.CssSelector(_trSelectors)));
             Assert.IsTrue(_driver.FindElements(By.CssSelector(_trSelectors)).Count == _pageSize);
         }
 

@@ -10,3 +10,10 @@ Scenario: View First Page
 	Then I should see the list items paged
 	And I press the next page button
 	And I see more 30 results
+
+@second
+Scenario: Insert new item
+	Given I access the sharepoint site
+	When I navigate to the Projects list
+	Then I press the new button e insert item data e save
+	And I should see the new item
