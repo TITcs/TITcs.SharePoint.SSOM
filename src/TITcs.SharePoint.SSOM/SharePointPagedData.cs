@@ -13,6 +13,7 @@ namespace TITcs.SharePoint.SSOM
 
         private const string REGEX_PID = "p_ID=[0-9]*";
         private const string REGEX_BACK_PAGING = "PagedPrev=TRUE";
+        private int _numbersOfPage;
         public string PagingInfo { get; set; }
         public int TotalItems { get; set; }
         public int CurrentPage { get; set; }
@@ -30,15 +31,15 @@ namespace TITcs.SharePoint.SSOM
 
         public SharePointPagedData(SPListItemCollection originalData, ICollection<TEntity> data, string pagingInfo, uint pageSize)
         {
-            //PagingInfo = pagingInfo;
             OriginalData = originalData;
             Data = data;
             TotalItems = originalData.Count;
             PageSize = pageSize;
-            
+            _numbersOfPage = GetNumbersOfPage();
+
 
             // build paging data
-            NextPageQuery = GetNextPageQuery();
+            NextPageQuery = pagingInfo;
             NextPageIndex = GetNextPageIndex();
             PreviousPageQuery = GetPreviousPageQuery();
             CurrentPageSubtitle = GetCurrentPageSubtitle();
@@ -79,34 +80,40 @@ namespace TITcs.SharePoint.SSOM
         private string GetCurrentPageSubtitle()
         {
             var sb = new StringBuilder();
-            sb.AppendFormat("Página {0} de {1}", GetCurrentPage(), TotalItems / PageSize);
+            sb.AppendFormat("Página {0} de {1}", GetCurrentPage(), _numbersOfPage);
             return sb.ToString();
         }
         private int GetNextPageIndex()
         {
             // search for id param and extract
             var nextPageIndex = 0;
-            var searchPID = Regex.Match(NextPageQuery, "p_ID=[0-9]*"); // SEARCH A WAY TO RECOGNIZE THIS IS LAST PAGE
-            if (searchPID.Success)
+            if (!string.IsNullOrEmpty(NextPageQuery))
             {
-                var splitPID = searchPID.Value.Split(new[] { "=" }, StringSplitOptions.RemoveEmptyEntries);
-                if (splitPID != null && splitPID.Length >= 2)
+                var searchPID = Regex.Match(NextPageQuery, "p_ID=[0-9]*"); // SEARCH A WAY TO RECOGNIZE THIS IS LAST PAGE
+                if (searchPID.Success)
                 {
-                    // find index in origin list based on id
-                    var pID = Convert.ToInt32(splitPID[1]);
-                    nextPageIndex = OriginalData.OfType<SPListItem>().ToList<SPListItem>().FindIndex(i => i.ID == pID);
-                    nextPageIndex = nextPageIndex > (TotalItems - 1) ? TotalItems - 1 : nextPageIndex;
+                    var splitPID = searchPID.Value.Split(new[] { "=" }, StringSplitOptions.RemoveEmptyEntries);
+                    if (splitPID != null && splitPID.Length >= 2)
+                    {
+                        // find index in origin list based on id
+                        var pID = Convert.ToInt32(splitPID[1]);
+                        nextPageIndex = OriginalData.OfType<SPListItem>().ToList<SPListItem>().FindIndex(i => i.ID == pID);
+                        nextPageIndex = nextPageIndex > (TotalItems - 1) ? TotalItems - 1 : nextPageIndex;
+                    }
                 }
+            }
+            else
+            {
+                nextPageIndex = OriginalData.OfType<SPListItem>().ToList<SPListItem>().FindIndex(i => i.ID == Data.OfType<SharePointItem>().ToList<SharePointItem>()[Data.Count - 1].Id);
             }
 
             return nextPageIndex;
         }
         private bool IsFirstPage()
         {
-            var numberOfPages = TotalItems / PageSize;
             var page = 1;
 
-            for (int i = 1; i <= numberOfPages; i++)
+            for (int i = 1; i <= _numbersOfPage; i++)
             {
                 if (NextPageIndex <= ((i * PageSize) - 1))
                 {
@@ -119,10 +126,9 @@ namespace TITcs.SharePoint.SSOM
         }
         private bool IsLastPage()
         {
-            var numberOfPages = TotalItems / PageSize;
             var page = 1;
 
-            for (int i = 1; i <= numberOfPages; i++)
+            for (int i = 1; i <= _numbersOfPage; i++)
             {
                 if (NextPageIndex <= ((i * PageSize) - 1))
                 {
@@ -131,16 +137,15 @@ namespace TITcs.SharePoint.SSOM
                 }
             }
 
-            return page == numberOfPages;
+            return page == _numbersOfPage;
         }
         private int GetCurrentPage()
         {
-            var numberOfPages = TotalItems / PageSize;
             var page = 1;
 
-            for (int i = 1; i <= numberOfPages; i++)
+            for (int i = 1; i <= _numbersOfPage; i++)
             {
-                if (NextPageIndex  < (i * PageSize))
+                if (NextPageIndex < (i * PageSize))
                 {
                     page = i;
                     break;
@@ -148,6 +153,12 @@ namespace TITcs.SharePoint.SSOM
             }
 
             return page;
+        }
+
+        private int GetNumbersOfPage()
+        {
+            var pagesCount = (double)TotalItems / PageSize;
+            return (int)(pagesCount % 1 == 0 ? pagesCount : pagesCount + 1);
         }
 
         #endregion

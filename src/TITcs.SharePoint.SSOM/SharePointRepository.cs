@@ -25,7 +25,7 @@ namespace TITcs.SharePoint.SSOM
         #region constructors
 
         protected SharePointRepository()
-            :this(SPContext.Current.Web)
+            : this(SPContext.Current.Web)
         {
         }
 
@@ -47,8 +47,8 @@ namespace TITcs.SharePoint.SSOM
             RowLimit = 0;
 
             Logger.Logger.Debug("SharePointRepository.Constructor", "Title = {0}", Title);
-        }    
-        
+        }
+
         #endregion
 
         #region methods
@@ -259,7 +259,6 @@ namespace TITcs.SharePoint.SSOM
 
                     // access source list
                     var list = GetSourceList();
-                    //var sourcePagingInfo = pagingInfo;
 
                     // build all items query
                     var query = new SPQuery();
@@ -269,7 +268,7 @@ namespace TITcs.SharePoint.SSOM
 
                     var items = list.GetItems(query);
                     var originalItems = items;
-                    
+
                     // count total items
                     var totalItems = items.Count;
 
@@ -297,10 +296,13 @@ namespace TITcs.SharePoint.SSOM
                     {
                         pagingInfo = items.ListItemCollectionPosition.PagingInfo;
                     }
+                    else
+                    {
+                        pagingInfo = string.Empty;
+                    }
 
 
-                    var entities = PopulateItems(items);                    
-
+                    var entities = PopulateItems(items);
                     return new SharePointPagedData<TEntity>(originalItems, entities, pagingInfo, RowLimit);
                 }
             });
@@ -322,7 +324,7 @@ namespace TITcs.SharePoint.SSOM
 
                     SPQuery query = new SPQuery();
 
-                    if(RowLimit > 0)
+                    if (RowLimit > 0)
                         query.RowLimit = RowLimit;
 
                     if (!string.IsNullOrEmpty(camlQuery))
