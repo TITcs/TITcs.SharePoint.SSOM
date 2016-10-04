@@ -26,7 +26,7 @@ namespace TITcs.SharePoint.SSOM.Services
                             throw new Exception("AssemblyName not defined");
 
                         _handlerTypes = Assembly.Load(_serviceSection.AssemblyName)
-                            .ExportedTypes.Where(i => i.BaseType.Name == "ServiceBase")
+                            .ExportedTypes.Where(i => i.BaseType != null && i.BaseType.Name == "ServiceBase")
                             .ToArray();
                     }
                     else
