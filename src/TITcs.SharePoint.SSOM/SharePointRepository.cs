@@ -65,7 +65,6 @@ namespace TITcs.SharePoint.SSOM
                 throw;
             }
         }
-
         protected void Exec(Action method)
         {
             try
@@ -78,7 +77,6 @@ namespace TITcs.SharePoint.SSOM
                 throw;
             }
         }
-
         public TEntity GetById(int id)
         {
             Logger.Logger.Debug("SharePointRepository.GetById", "ID = {0}", id);
@@ -114,7 +112,6 @@ namespace TITcs.SharePoint.SSOM
 
             return result;
         }
-
         public SPListItem GetSPListItem(int id)
         {
             Logger.Logger.Debug("SharePointRepository.GetSPListItem", "ID = {0}", id);
@@ -141,7 +138,6 @@ namespace TITcs.SharePoint.SSOM
 
             return result;
         }
-
         protected int Insert(Fields<TEntity> fields)
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Insert", string.Format("List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
@@ -195,12 +191,10 @@ namespace TITcs.SharePoint.SSOM
 
             });
         }
-
         protected SPList GetSourceList()
         {
             return ListUtils.GetList(_context.Web, Title);
         }
-
         protected void Update(Fields<TEntity> fields)
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Update", "List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => $"{i.Key} = {i.Value}")).ToArray());
@@ -230,23 +224,38 @@ namespace TITcs.SharePoint.SSOM
                     {
                         var columnName = getFieldColumn(typeof(TEntity), field.Key);
 
+                        // lógica de atualização de campo UserMulti e afins
+                        if (field.Value is IEnumerable<Lookup>)
+                        {
+                            var fieldValues = new SPFieldLookupValueCollection();
+                            var _multi = (IEnumerable<Lookup>)field.Value;
+                            if (_multi != null)
+                            {
+                                foreach (var keyValuePair in _multi)
+                                {
+                                    fieldValues.Add(new SPFieldLookupValue
+                                    {
+                                        LookupId = keyValuePair.Id
+                                    });
+                                }
+                                item[columnName] = fieldValues;
+                                continue;
+                            }
+                        }
                         if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
                             item[columnName] = field.Value;
                     }
 
                     item.Update();
-
                     _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
                 }
 
             });
         }
-
         private string getFieldColumn(Type type, string columnName)
         {
             return type.GetProperties().Single(p => p.Name == columnName).GetCustomAttribute<SharePointFieldAttribute>().Name;
         }
-
         public SharePointPagedData<TEntity> GetAll(string pagingInfo, uint pageSize = 10, string camlQuery = null)
         {
             Logger.Logger.Debug("SharePointRepository.GetAll", "PagingInfo = {0}, Query = {1}", pagingInfo, camlQuery);
@@ -307,7 +316,6 @@ namespace TITcs.SharePoint.SSOM
 
             return result;
         }
-
         public ICollection<TEntity> GetAll(string camlQuery = null)
         {
             Logger.Logger.Debug("SharePointRepository.GetAll", "Query = {0}", camlQuery);
@@ -338,7 +346,6 @@ namespace TITcs.SharePoint.SSOM
 
             return result;
         }
-
         private ICollection<TEntity> PopulateItems(SPListItemCollection items)
         {
             ICollection<TEntity> entities = new Collection<TEntity>();
@@ -354,7 +361,6 @@ namespace TITcs.SharePoint.SSOM
             }
             return entities;
         }
-
         private void SetProperties(TEntity entity, SPListItem listItem)
         {
             typeof(TEntity).GetProperties().ToList().ForEach(p =>
@@ -383,7 +389,6 @@ namespace TITcs.SharePoint.SSOM
             });
 
         }
-
         private object ValidateValueTypeFile(SPFile file)
         {
             if (file == null)
@@ -400,12 +405,10 @@ namespace TITcs.SharePoint.SSOM
                 Content = file.OpenBinary()
             };
         }
-
         private string GetListTitle()
         {
             return this.GetType().GetCustomAttribute<SharePointListAttribute>().Title;
         }
-
         private object ValidateValueType(SPField field, object value)
         {
             switch (field.Type)
@@ -628,7 +631,6 @@ namespace TITcs.SharePoint.SSOM
 
             throw new Exception(string.Format("Type \"{0}\" was not implemented.", field.Type));
         }
-
         protected void Delete(int id)
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Delete", string.Format("List = {0}, ID = {1}", Title, id));
@@ -650,7 +652,6 @@ namespace TITcs.SharePoint.SSOM
                 }
             });
         }
-
         protected File UploadImage(string fileName, Stream stream, Fields<TEntity> fields = null, int maxLength = 4000000)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -703,7 +704,6 @@ namespace TITcs.SharePoint.SSOM
                 }
             });
         }
-
         private double ConvertBytesToMegabytes(long bytes)
         {
             return (bytes / 1024f) / 1024f;
