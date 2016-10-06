@@ -54,6 +54,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.SharePoint, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL" />
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
   </ItemGroup>
@@ -74,6 +78,9 @@
   <ItemGroup>
     <Compile Include="Item.cs" />
     <Compile Include="MelhoresPraticasComentariosRepository.cs" />
+    <Compile Include="MelhoresPraticasNotificacaoItem.cs" />
+    <Compile Include="MelhoresPraticasNotificacaoRepository.cs" />
+    <Compile Include="MelhoresPraticasNotificacaoTest.cs" />
     <Compile Include="PGCTest.cs" />
     <Compile Include="SearchUserTest.cs" />
     <Compile Include="PagingTest.cs" />
@@ -87,6 +94,9 @@
       <Project>{abd9a716-03ce-41a6-8879-c3cc13396a96}</Project>
       <Name>TITcs.SharePoint.SSOM</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
