@@ -56,6 +56,12 @@ namespace TITcs.SharePoint.SSOM.Services
             catch (Exception e)
             {
                 Logger.Logger.Unexpected("ServiceBase.ProcessRequest", e.Message);
+#if DEBUG
+                if(e.InnerException != null)
+                {
+                    Logger.Logger.Unexpected("ServiceBase.ProcessRequest.InnerException", e.InnerException.Message);
+                }
+#endif
 
                 context.Response.StatusCode = 500;
                 context.Response.TrySkipIisCustomErrors = true;
@@ -199,7 +205,7 @@ namespace TITcs.SharePoint.SSOM.Services
                 goto getRoute;
             }
 
-            getRoute:
+        getRoute:
 
             if (url.EndsWith("/"))
                 url = url.Substring(0, url.Length - 1);
