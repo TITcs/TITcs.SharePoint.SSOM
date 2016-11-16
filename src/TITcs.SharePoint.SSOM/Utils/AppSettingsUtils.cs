@@ -4,6 +4,8 @@ namespace TITcs.SharePoint.SSOM.Utils
 {
     public static class AppSettingsUtils
     {
+        #region fields and properties
+
         public static int CacheDurationInMinutes
         {
             get
@@ -20,6 +22,10 @@ namespace TITcs.SharePoint.SSOM.Utils
                 }
             }
         }
+
+        public const string SIGNALR_PATH = "app:SignalRPath";
+
+        #endregion
 
         public static string Read(string key)
         {

@@ -56,7 +56,14 @@ namespace TITcs.SharePoint.SSOM.Logger
         public static void Debug(string source, string message, params object[] parameters)
         {
 #if DEBUG
-            WriteLog(LoggerCategory.Debug, source, string.Format(message, parameters));
+            WriteLog(LoggerCategory.Debug, source, message != null ? string.Format(message, parameters) : "");
+#endif
+        }
+
+        public static void Debug(string source)
+        {
+#if DEBUG
+            Debug(source, null);
 #endif
         }
 
