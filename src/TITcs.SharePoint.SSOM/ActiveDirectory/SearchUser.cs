@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.DirectoryServices.AccountManagement;
 using System.Linq;
@@ -18,23 +19,30 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
         {
             foreach (var context in _contexts)
             {
-                using (UserPrincipal userPrincipal = new UserPrincipal(context))
+                try
                 {
-                    userPrincipal.SamAccountName = loginName;
-
-                    var principalSearcher = new PrincipalSearcher(userPrincipal);
-
-                    foreach (var principal in principalSearcher.FindAll())
+                    using (UserPrincipal userPrincipal = new UserPrincipal(context))
                     {
-                        if (principal is UserPrincipal)
+                        userPrincipal.SamAccountName = loginName;
+
+                        var principalSearcher = new PrincipalSearcher(userPrincipal);
+
+                        foreach (var principal in principalSearcher.FindAll())
                         {
-                            var userPrincipal1 = (UserPrincipal) principal;
+                            if (principal is UserPrincipal)
+                            {
+                                var userPrincipal1 = (UserPrincipal) principal;
 
-                            var user = bindUser(userPrincipal1);
+                                var user = bindUser(userPrincipal1);
 
-                            return user;
+                                return user;
+                            }
                         }
                     }
+                }
+                catch (Exception e)
+                {
+                    Logger.Logger.Unexpected("Search.GetUser", e.Message);
                 }
             }
 
@@ -45,23 +53,30 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
         {
             foreach (var context in _contexts)
             {
-                using (UserPrincipal userPrincipal = new UserPrincipal(context))
+                try
                 {
-                    userPrincipal.DisplayName = displayName;
-
-                    var principalSearcher = new PrincipalSearcher(userPrincipal);
-
-                    foreach (var principal in principalSearcher.FindAll())
+                    using (UserPrincipal userPrincipal = new UserPrincipal(context))
                     {
-                        if (principal is UserPrincipal)
+                        userPrincipal.DisplayName = displayName;
+
+                        var principalSearcher = new PrincipalSearcher(userPrincipal);
+
+                        foreach (var principal in principalSearcher.FindAll())
                         {
-                            var userPrincipal1 = (UserPrincipal)principal;
+                            if (principal is UserPrincipal)
+                            {
+                                var userPrincipal1 = (UserPrincipal) principal;
 
-                            var user = bindUser(userPrincipal1);
+                                var user = bindUser(userPrincipal1);
 
-                            return user;
+                                return user;
+                            }
                         }
                     }
+                }
+                catch (Exception e)
+                {
+                    Logger.Logger.Unexpected("Search.GetUserByDisplayName", e.Message);
                 }
             }
 
@@ -89,22 +104,29 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
         {
             foreach (var context in _contexts)
             {
-                using (GroupPrincipal groupPrincipal = new GroupPrincipal(context))
+                try
                 {
-                    PrincipalSearcher principalSearcher = new PrincipalSearcher(groupPrincipal);
-
-                    var principal = principalSearcher.FindAll().SingleOrDefault(i => i.Name == name);
-
-                    var groupPrincipal1 = (GroupPrincipal) principal;
-
-                    var group = new Group()
+                    using (GroupPrincipal groupPrincipal = new GroupPrincipal(context))
                     {
-                        Id = groupPrincipal1.Guid.ToString(),
-                        Name = groupPrincipal1.Name,
-                        Users = getUsers(groupPrincipal1.Members)
-                    };
+                        PrincipalSearcher principalSearcher = new PrincipalSearcher(groupPrincipal);
 
-                    return group;
+                        var principal = principalSearcher.FindAll().SingleOrDefault(i => i.Name == name);
+
+                        var groupPrincipal1 = (GroupPrincipal) principal;
+
+                        var group = new Group()
+                        {
+                            Id = groupPrincipal1.Guid.ToString(),
+                            Name = groupPrincipal1.Name,
+                            Users = getUsers(groupPrincipal1.Members)
+                        };
+
+                        return group;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Logger.Unexpected("Search.GetGroup", e.Message);
                 }
             }
 
