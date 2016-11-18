@@ -43,6 +43,11 @@ namespace TITcs.SharePoint.SSOM.Logger
             Current.WriteTrace(0, category, category.TraceSeverity, string.Concat(string.Format("[{0}]", source), " ", errorMessage));
         }
 
+        public static void Information(string source)
+        {
+            Information(source, string.Empty);
+        }
+
         public static void Information(string source, string message)
         {
             WriteLog(LoggerCategory.Information, source, message);
@@ -63,7 +68,7 @@ namespace TITcs.SharePoint.SSOM.Logger
         public static void Debug(string source)
         {
 #if DEBUG
-            Debug(source, null);
+            Debug(source, string.Empty);
 #endif
         }
 
