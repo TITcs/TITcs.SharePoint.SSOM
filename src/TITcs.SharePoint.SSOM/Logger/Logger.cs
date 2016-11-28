@@ -1,6 +1,8 @@
 ﻿#define DEBUG
+using System;
 using Microsoft.SharePoint.Administration;
 using System.Collections.Generic;
+using System.Text;
 
 namespace TITcs.SharePoint.SSOM.Logger
 {
@@ -56,7 +58,7 @@ namespace TITcs.SharePoint.SSOM.Logger
         public static void Information(string source, string message, params object[] parameters)
         {
             WriteLog(LoggerCategory.Information, source, string.Format(message, parameters));
-        }
+        } 
 
         public static void Debug(string source, string message, params object[] parameters)
         {
@@ -67,14 +69,26 @@ namespace TITcs.SharePoint.SSOM.Logger
 
         public static void Debug(string source)
         {
-#if DEBUG
             Debug(source, string.Empty);
-#endif
         }
 
         public static void Unexpected(string source, string message)
         {
             WriteLog(LoggerCategory.Unexpected, source, message);
+        }
+
+        public static void Unexpected(string source, Exception exception)
+        {
+            var message = new StringBuilder();
+
+            message.Append(exception.Message);
+
+            if (exception.InnerException != null)
+            {
+                message.AppendLine(exception.InnerException.Message);
+            }
+
+            WriteLog(LoggerCategory.Unexpected, source, message.ToString());
         }
 
         public static void Unexpected(string source, string message, params object[] parameters)
