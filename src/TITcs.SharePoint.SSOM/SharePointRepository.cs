@@ -691,6 +691,7 @@ namespace TITcs.SharePoint.SSOM
 
                     return new File
                     {
+                        Id = Convert.ToInt32(file.Item["Id"]),
                         Url = fileRef,
                         Name = fileName,
                         Length = stream.Length,
@@ -743,6 +744,7 @@ namespace TITcs.SharePoint.SSOM
 
                     return new File
                     {
+                        Id = Convert.ToInt32(file.Item["Id"]),
                         Url = fileRef,
                         Name = fileName,
                         Length = stream.Length,
