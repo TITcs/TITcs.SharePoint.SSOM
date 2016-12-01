@@ -115,7 +115,7 @@ namespace TITcs.SharePoint.SSOM.Services
 
                     default:
                         {
-                            var message = string.Format("Not implemented RequestType: {0}", request.RequestType);
+                            var message = $"Not implemented RequestType: {request.RequestType}";
                             Logger.Logger.Unexpected("ServiceBase.Request", message);
                             throw new Exception(message);
                         }
@@ -236,7 +236,7 @@ namespace TITcs.SharePoint.SSOM.Services
 
             if (metodo == null)
             {
-                var message = string.Format("The {0} route was not found", _routeName);
+                var message = $"The {_routeName} route was not found";
                 Logger.Logger.Unexpected("ServiceBase.InvokeMethod", message);
                 throw new Exception(message);
             }
