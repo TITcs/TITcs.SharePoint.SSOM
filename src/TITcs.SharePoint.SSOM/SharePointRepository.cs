@@ -629,11 +629,11 @@ namespace TITcs.SharePoint.SSOM
                     throw new ArgumentOutOfRangeException();
             }
 
-            throw new Exception(string.Format("Type \"{0}\" was not implemented.", field.Type));
+            throw new Exception($"Type \"{field.Type}\" was not implemented.");
         }
         protected void Delete(int id)
         {
-            Logger.Logger.Information("SharePointRepository<TEntity>.Delete", string.Format("List = {0}, ID = {1}", Title, id));
+            Logger.Logger.Information("SharePointRepository<TEntity>.Delete", $"List = {Title}, ID = {id}");
 
             Exec(() =>
             {
@@ -652,13 +652,62 @@ namespace TITcs.SharePoint.SSOM
                 }
             });
         }
+        protected File Upload(string fileName, Stream stream, Fields<TEntity> fields = null, int maxLength = 4000000)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                throw new Exception("The file name can not be null.");
+
+            if (stream.Length > maxLength)
+                throw new Exception($"The maximum file size is {ConvertBytesToMegabytes(maxLength)}mb");
+
+            string ext = Path.GetExtension(fileName).ToLower();
+
+            fileName = fileName.Replace(" ", "-");
+
+            return Call(() =>
+            {
+                using (_context.Web)
+                {
+                    var list = GetSourceList();
+
+                    var fileRef = $"{list.RootFolder.ServerRelativeUrl}/{fileName}";
+
+                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = true;
+
+                    var file = list.RootFolder.Files.Add(fileRef, stream, true);
+
+                    if (fields != null)
+                    {
+                        foreach (var item in fields.ItemDictionary)
+                        {
+                            file.Item[item.Key] = item.Value;
+                        }
+
+                        file.Item.Update();
+                    }
+
+                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
+
+                    return new File
+                    {
+                        Url = fileRef,
+                        Name = fileName,
+                        Length = stream.Length,
+                        Created = DateTime.Now,
+                        Extension = ext,
+                        Title = fileName
+                    };
+                }
+            });
+        }
         protected File UploadImage(string fileName, Stream stream, Fields<TEntity> fields = null, int maxLength = 4000000)
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new Exception("The file name can not be null.");
 
             if (stream.Length > maxLength)
-                throw new Exception(string.Format("The maximum file size is {0}mb", ConvertBytesToMegabytes(maxLength)));
+                throw new Exception($"The maximum file size is {ConvertBytesToMegabytes(maxLength)}mb");
 
             string ext = Path.GetExtension(fileName).ToLower();
 
@@ -673,7 +722,7 @@ namespace TITcs.SharePoint.SSOM
                 {
                     var list = GetSourceList();
 
-                    var fileRef = string.Format("{0}/{1}", list.RootFolder.ServerRelativeUrl, fileName);
+                    var fileRef = $"{list.RootFolder.ServerRelativeUrl}/{fileName}";
 
                     bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
                     _context.Web.AllowUnsafeUpdates = true;
