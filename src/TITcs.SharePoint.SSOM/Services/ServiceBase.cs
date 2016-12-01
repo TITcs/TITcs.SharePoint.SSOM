@@ -37,6 +37,10 @@ namespace TITcs.SharePoint.SSOM.Services
 
         public void ProcessRequest(HttpContext context)
         {
+#if DEBUG
+            Logger.Logger.Debug("ServiceBase.ProcessRequest", "Begin");
+#endif
+
             _httpContext = context;
             _isPost = context.Request.RequestType.Equals("POST");
 
@@ -56,12 +60,12 @@ namespace TITcs.SharePoint.SSOM.Services
             catch (Exception e)
             {
                 Logger.Logger.Unexpected("ServiceBase.ProcessRequest", e.Message);
-#if DEBUG
-                if(e.InnerException != null)
+
+                if (e.InnerException != null)
                 {
                     Logger.Logger.Unexpected("ServiceBase.ProcessRequest.InnerException", e.InnerException.Message);
                 }
-#endif
+
 
                 context.Response.StatusCode = 500;
                 context.Response.TrySkipIisCustomErrors = true;
@@ -70,6 +74,10 @@ namespace TITcs.SharePoint.SSOM.Services
             }
 
             context.Response.Write(JsonConvert.SerializeObject(result));
+
+#if DEBUG
+            Logger.Logger.Debug("ServiceBase.ProcessRequest", "End");
+#endif
         }
 
         private dynamic CreateModel(HttpContext context)
@@ -107,7 +115,7 @@ namespace TITcs.SharePoint.SSOM.Services
 
                     default:
                         {
-                            var message = string.Format("Not implemented RequestType: {0}", request.RequestType);
+                            var message = $"Not implemented RequestType: {request.RequestType}";
                             Logger.Logger.Unexpected("ServiceBase.Request", message);
                             throw new Exception(message);
                         }
@@ -228,7 +236,7 @@ namespace TITcs.SharePoint.SSOM.Services
 
             if (metodo == null)
             {
-                var message = string.Format("The {0} route was not found", _routeName);
+                var message = $"The {_routeName} route was not found";
                 Logger.Logger.Unexpected("ServiceBase.InvokeMethod", message);
                 throw new Exception(message);
             }
