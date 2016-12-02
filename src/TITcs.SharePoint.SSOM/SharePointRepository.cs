@@ -355,24 +355,29 @@ namespace TITcs.SharePoint.SSOM
         {
             typeof(TEntity).GetProperties().ToList().ForEach(p =>
             {
-                var columnName = p.GetCustomAttribute<SharePointFieldAttribute>().Name;
+                var customAttribute = p.GetCustomAttribute<SharePointFieldAttribute>();
 
-                if (listItem.Fields.ContainsField(columnName))
+                if (customAttribute != null)
                 {
-                    var field = listItem.Fields.GetFieldByInternalName(columnName);
-                    var value = listItem[columnName];
+                    var columnName = p.GetCustomAttribute<SharePointFieldAttribute>().Name;
 
-                    if (value != null)
+                    if (listItem.Fields.ContainsField(columnName))
                     {
-                        p.SetValue(entity, ValidateValueType(field, value));
+                        var field = listItem.Fields.GetFieldByInternalName(columnName);
+                        var value = listItem[columnName];
+
+                        if (value != null)
+                        {
+                            p.SetValue(entity, ValidateValueType(field, value));
+                        }
+
                     }
-
-                }
-                else
-                {
-                    if (columnName.Equals("File"))
+                    else
                     {
-                        p.SetValue(entity, ValidateValueTypeFile(listItem.File));
+                        if (columnName.Equals("File"))
+                        {
+                            p.SetValue(entity, ValidateValueTypeFile(listItem.File));
+                        }
                     }
                 }
 
