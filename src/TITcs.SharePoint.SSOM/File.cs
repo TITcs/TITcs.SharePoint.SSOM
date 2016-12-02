@@ -21,7 +21,7 @@ namespace TITcs.SharePoint.SSOM
 
             return new File
             {
-                Id = Convert.ToInt32(file.Item["Id"]),
+                Id = Convert.ToInt32(file.Item["ID"]),
                 Name = file.Name,
                 Title = file.Title,
                 Created = file.TimeCreated,
