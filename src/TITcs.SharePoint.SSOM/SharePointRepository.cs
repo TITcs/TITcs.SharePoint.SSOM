@@ -148,24 +148,21 @@ namespace TITcs.SharePoint.SSOM
                 {
                     var list = GetSourceList();
 
-                    SPListItem newitem = list.AddItem();
+                    SPListItem item = list.AddItem();
 
                     bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
                     _context.Web.AllowUnsafeUpdates = true;
 
                     foreach (var field in fields.ItemDictionary)
                     {
-                        if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            ValidateFieldItemDictionary(field, newitem);
-                        }
+                         ValidateFieldItemDictionary(field, item);
                     }
 
-                    newitem.Update();
+                    item.Update();
 
                     _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
 
-                    return newitem.ID;
+                    return item.ID;
                 }
 
             });
@@ -173,6 +170,11 @@ namespace TITcs.SharePoint.SSOM
 
         private void ValidateFieldItemDictionary(KeyValuePair<string, object> field, SPListItem listItem)
         {
+            if (field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return;
+            }
+
             var columnName = getFieldColumn(typeof(TEntity), field.Key);
 
             if (field.Value is IEnumerable<Lookup>)
@@ -231,10 +233,7 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
-                        if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            ValidateFieldItemDictionary(field, item);
-                        }
+                        ValidateFieldItemDictionary(field, item);
                     }
 
                     item.Update();
@@ -666,26 +665,23 @@ namespace TITcs.SharePoint.SSOM
                     bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
                     _context.Web.AllowUnsafeUpdates = true;
 
-                    var file = list.RootFolder.Files.Add(fileRef, stream, true);
+                    var spFile = list.RootFolder.Files.Add(fileRef, stream, true);
 
                     if (fields != null)
                     {
                         foreach (var field in fields.ItemDictionary)
                         {
-                            if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                ValidateFieldItemDictionary(field, file.Item);
-                            }
+                            ValidateFieldItemDictionary(field, spFile.Item);
                         }
 
-                        file.Item.Update();
+                        spFile.Item.Update();
                     }
 
                     _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
 
-                    return new File
+                    var file = new File
                     {
-                        Id = Convert.ToInt32(file.Item["Id"]),
+                        Id = Convert.ToInt32(spFile.Item["ID"]),
                         Url = fileRef,
                         Name = fileName,
                         Length = stream.Length,
@@ -693,6 +689,8 @@ namespace TITcs.SharePoint.SSOM
                         Extension = ext,
                         Title = fileName
                     };
+
+                    return file;
                 }
             });
         }
@@ -722,26 +720,24 @@ namespace TITcs.SharePoint.SSOM
                     bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
                     _context.Web.AllowUnsafeUpdates = true;
 
-                    var file = list.RootFolder.Files.Add(fileRef, stream, true);
+                    var spFile = list.RootFolder.Files.Add(fileRef, stream, true);
 
                     if (fields != null)
                     {
                         foreach (var field in fields.ItemDictionary)
                         {
-                            if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                ValidateFieldItemDictionary(field, file.Item);
-                            }
+                            ValidateFieldItemDictionary(field, spFile.Item);
                         }
-                        file.Item.Update();
+
+                        spFile.Item.Update();
 
                     }
 
                     _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
 
-                    return new File
+                    var file = new File
                     {
-                        Id = Convert.ToInt32(file.Item["Id"]),
+                        Id = Convert.ToInt32(spFile.Item["ID"]),
                         Url = fileRef,
                         Name = fileName,
                         Length = stream.Length,
@@ -749,6 +745,8 @@ namespace TITcs.SharePoint.SSOM
                         Extension = ext,
                         Title = fileName
                     };
+
+                    return file;
                 }
             });
         }
