@@ -140,7 +140,7 @@ namespace TITcs.SharePoint.SSOM
         }
         protected int Insert(Fields<TEntity> fields)
         {
-            Logger.Logger.Information("SharePointRepository<TEntity>.Insert", string.Format("List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => string.Format("{0} = {1}", i.Key, i.Value)).ToArray())));
+            Logger.Logger.Information("SharePointRepository<TEntity>.Insert", $"List = {Title}, Fields = {string.Join(",", fields.ItemDictionary.Select(i => $"{i.Key} = {i.Value}").ToArray())}");
 
             return Call(() =>
             {
@@ -155,31 +155,10 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
-                        var columnName = getFieldColumn(typeof(TEntity), field.Key);
-
-                        if (field.Value is IEnumerable<Lookup>)
+                        if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            var fieldValues = new SPFieldLookupValueCollection();
-
-                            foreach (var keyValuePair in (IEnumerable<Lookup>)field.Value)
-                            {
-                                fieldValues.Add(new SPFieldLookupValue
-                                {
-                                    LookupId = keyValuePair.Id
-                                });
-                            }
-                            newitem[columnName] = fieldValues;
-                            continue;
+                            ValidateFieldItemDictionary(field, newitem);
                         }
-
-                        var lookup = field.Value as Lookup;
-                        if (lookup != null)
-                        {
-                            newitem[columnName] = lookup.Id;
-                            continue;
-                        }
-
-                        newitem[columnName] = field.Value;
                     }
 
                     newitem.Update();
@@ -191,6 +170,36 @@ namespace TITcs.SharePoint.SSOM
 
             });
         }
+
+        private void ValidateFieldItemDictionary(KeyValuePair<string, object> field, SPListItem listItem)
+        {
+            var columnName = getFieldColumn(typeof(TEntity), field.Key);
+
+            if (field.Value is IEnumerable<Lookup>)
+            {
+                var fieldValues = new SPFieldLookupValueCollection();
+
+                foreach (var keyValuePair in (IEnumerable<Lookup>) field.Value)
+                {
+                    fieldValues.Add(new SPFieldLookupValue
+                    {
+                        LookupId = keyValuePair.Id
+                    });
+                }
+                listItem[columnName] = fieldValues;
+                return;
+            }
+
+            var lookup = field.Value as Lookup;
+            if (lookup != null)
+            {
+                listItem[columnName] = lookup.Id;
+                return;
+            }
+
+            listItem[columnName] = field.Value;
+        }
+
         protected SPList GetSourceList()
         {
             return ListUtils.GetList(_context.Web, Title);
@@ -222,28 +231,10 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
-                        var columnName = getFieldColumn(typeof(TEntity), field.Key);
-
-                        // lógica de atualização de campo UserMulti e afins
-                        if (field.Value is IEnumerable<Lookup>)
-                        {
-                            var fieldValues = new SPFieldLookupValueCollection();
-                            var _multi = (IEnumerable<Lookup>)field.Value;
-                            if (_multi != null)
-                            {
-                                foreach (var keyValuePair in _multi)
-                                {
-                                    fieldValues.Add(new SPFieldLookupValue
-                                    {
-                                        LookupId = keyValuePair.Id
-                                    });
-                                }
-                                item[columnName] = fieldValues;
-                                continue;
-                            }
-                        }
                         if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
-                            item[columnName] = field.Value;
+                        {
+                            ValidateFieldItemDictionary(field, item);
+                        }
                     }
 
                     item.Update();
@@ -679,11 +670,11 @@ namespace TITcs.SharePoint.SSOM
 
                     if (fields != null)
                     {
-                        foreach (var item in fields.ItemDictionary)
+                        foreach (var field in fields.ItemDictionary)
                         {
-                            if (item.Key.ToLower() != "id")
+                            if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
                             {
-                                file.Item[item.Key] = item.Value;
+                                ValidateFieldItemDictionary(field, file.Item);
                             }
                         }
 
@@ -735,9 +726,12 @@ namespace TITcs.SharePoint.SSOM
 
                     if (fields != null)
                     {
-                        foreach (var item in fields.ItemDictionary)
+                        foreach (var field in fields.ItemDictionary)
                         {
-                            file.Item[item.Key] = item.Value;
+                            if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                ValidateFieldItemDictionary(field, file.Item);
+                            }
                         }
                         file.Item.Update();
 
