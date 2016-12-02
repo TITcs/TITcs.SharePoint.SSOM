@@ -681,7 +681,10 @@ namespace TITcs.SharePoint.SSOM
                     {
                         foreach (var item in fields.ItemDictionary)
                         {
-                            file.Item[item.Key] = item.Value;
+                            if (item.Key.ToLower() != "id")
+                            {
+                                file.Item[item.Key] = item.Value;
+                            }
                         }
 
                         file.Item.Update();
