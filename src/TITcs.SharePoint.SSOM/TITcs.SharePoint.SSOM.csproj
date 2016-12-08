@@ -111,6 +111,8 @@
   <ItemGroup>
     <Compile Include="ActiveDirectory\SearchUser.cs" />
     <Compile Include="Caching\Cache.cs" />
+    <Compile Include="Config\ServiceRegistrations.cs" />
+    <Compile Include="Config\ServiceRegistry.cs" />
     <Compile Include="Exceptions\InvalidRequestException.cs" />
     <Compile Include="Extensions\ConvertExtensions.cs" />
     <Compile Include="Extensions\LinqExtensions.cs" />
@@ -125,6 +127,7 @@
     <Compile Include="Lookup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Security\ImpersonateUser.cs" />
+    <Compile Include="Security\WindowsIdentityImpersonator.cs" />
     <Compile Include="Services\ServiceConnection.cs" />
     <Compile Include="Services\ServiceConnectionSlug.cs" />
     <Compile Include="Services\ServiceHub.cs" />
@@ -157,6 +160,7 @@
     <Compile Include="Utils\ListUtils.cs" />
     <Compile Include="Utils\MailUtils.cs" />
     <Compile Include="Utils\MethodUtils.cs" />
+    <Compile Include="Utils\RegistryUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

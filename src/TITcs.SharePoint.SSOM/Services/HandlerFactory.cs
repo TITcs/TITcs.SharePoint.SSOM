@@ -1,39 +1,67 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web;
+using TITcs.SharePoint.SSOM.Config;
 
 namespace TITcs.SharePoint.SSOM.Services
 {
     public class HandlerFactory : IHttpHandlerFactory
     {
-        private static Type[] _handlerTypes = null;
+        #region fields and properties
+
+        private static List<Type> _handlerTypes = new List<Type>();
         private static SharePointServiceSection _serviceSection;
+        public List<Type> HandlerTypes { get { return _handlerTypes; } }
+
+        #endregion
+
+        #region constructors
+
         public HandlerFactory()
         {
-            try
+            List<Type> exportedTypes;
+            var hasLoadedTypes = true;
+            try 
             {
-                if (_handlerTypes == null)
+                if (_handlerTypes == null || _handlerTypes.Count == 0)
                 {
-                    _serviceSection = (SharePointServiceSection)ConfigurationManager.GetSection("sharePointService/service");
+                    _serviceSection = (SharePointServiceSection) ConfigurationManager.GetSection("sharePointServices");
 
-                    if (_serviceSection.FilterType == FilterType.AssemblyName)
+                    if (_serviceSection != null)
                     {
-                        if (string.IsNullOrEmpty(_serviceSection.AssemblyName))
-                            throw new Exception("AssemblyName not defined");
+                        foreach (ServiceRegistry service in _serviceSection.Services)
+                        {
+                            if (service.FilterType == FilterType.AssemblyName)
+                            {
+                                if (string.IsNullOrEmpty(service.AssemblyName))
+                                    throw new Exception("AssemblyName not defined");
 
-                        _handlerTypes = Assembly.Load(_serviceSection.AssemblyName)
-                            .ExportedTypes.Where(i => i.BaseType != null && i.BaseType.Name == "ServiceBase")
-                            .ToArray();
-                    }
-                    else
-                    {
-                        _handlerTypes = AppDomain.CurrentDomain.GetAssemblies()
-                            .SelectMany(t => t.GetTypes())
-                            .Where(t => t.IsClass && t.IsPublic && t.Namespace == _serviceSection.Namespace).ToArray();
+                                // load the services defined in the referenced assembly
+                                exportedTypes = Assembly.Load(service.AssemblyName)
+                                    .ExportedTypes.Where(i => i.BaseType != null && i.BaseType.Name == "ServiceBase")
+                                    .ToList();
+
+                                _handlerTypes.AddRange(exportedTypes);
+                            }
+                            else
+                            {
+                                if (!hasLoadedTypes)
+                                {
+                                    // load the services defined in the current assembly
+                                    exportedTypes = AppDomain.CurrentDomain.GetAssemblies()
+                                                                        .SelectMany(t => t.GetTypes())
+                                                                        .Where(t => t.IsClass && t.IsPublic && t.Namespace == service.Namespace).ToList();
+                                    _handlerTypes.AddRange(exportedTypes);
+
+                                    hasLoadedTypes = true;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -45,27 +73,24 @@ namespace TITcs.SharePoint.SSOM.Services
             }
         }
 
-        public Type[] HandlerTypes
-        {
-            get { return _handlerTypes; }
-        }
+        #endregion
 
+        #region events and methods
+        
         public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
         {
             try
             {
-                if (_serviceSection.EnableCrossDomain)
-                {
-                    if (context.Request.UrlReferrer == null)
-                        throw new Exception("Invalid Cross Domain");
+                //if (_serviceSection.EnableCrossDomain)
+                //{
+                //    if (context.Request.UrlReferrer == null)
+                //        throw new Exception("Invalid Cross Domain");
 
-                    var urlReferrer = string.Format("{0}://{1}", context.Request.UrlReferrer.Scheme,
-                        context.Request.UrlReferrer.Authority);
+                //    var urlReferrer = string.Format("{0}://{1}", context.Request.UrlReferrer.Scheme,
+                //        context.Request.UrlReferrer.Authority);
+                //}
 
-                    //TODO
-                }
-
-                string className = Path.GetFileNameWithoutExtension(context.Request.PhysicalPath);
+                var className = Path.GetFileNameWithoutExtension(context.Request.PhysicalPath);
 
                 Logger.Logger.Information("HandlerFactory.GetHandler", string.Format("Variable className = {0}", className));
 
@@ -75,7 +100,9 @@ namespace TITcs.SharePoint.SSOM.Services
                 {
                     Logger.Logger.Debug("HandlerFactory.GetHandler", string.Format("Instance of {0}", type.Name));
 
-                    var handler = (IHttpHandler)Activator.CreateInstance(type);
+                    // TODO: IMPLEMENTAR CROSS DOMAIN POR ASSEMBLY
+
+                    var handler = (IHttpHandler) Activator.CreateInstance(type);
                     return handler;
                 }
 
@@ -84,16 +111,15 @@ namespace TITcs.SharePoint.SSOM.Services
                 throw new HttpException(500, message);
 
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Logger.Logger.Unexpected("HandlerFactory.GetHandler", e.Message);
+                Logger.Logger.Unexpected("HandlerFactory.GetHandler", ex.Message);
 
-                ResponseJSON(context.Response, e);
+                ResponseJSON(context.Response, ex);
             }
 
             return null;
         }
-
         private void ResponseJSON(HttpResponse response, Exception e)
         {
             response.Clear();
@@ -111,11 +137,11 @@ namespace TITcs.SharePoint.SSOM.Services
                 }
             }));
         }
-
-
         public void ReleaseHandler(IHttpHandler handler)
         {
 
         }
+
+        #endregion
     }
 }

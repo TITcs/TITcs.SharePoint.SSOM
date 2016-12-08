@@ -5,26 +5,32 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using TITcs.SharePoint.SSOM.Security;
 
 namespace TITcs.SharePoint.SSOM.Security
 {
+    /// <summary>
+    /// Utility class to make impersonated calls to the SharePoint web application
+    /// </summary>
     public class ImpersonateUser
     {
+        /// <summary>
+        /// Executes the delegate with Full Control rights even if the user does not otherwise have Full Control
+        /// </summary>
+        /// <param name="action">Action to execute under Full Control rights</param>
         public static void RunWithCurrentContextAndElevatedPrivilegesAndAccountSystem(Action<SPWeb> action)
         {
             SPSecurity.RunWithElevatedPrivileges(delegate ()
             {
                 var currentSite = SPContext.Current.Site;
-                SPUserToken systoken = currentSite.SystemAccount.UserToken;
-
-                using (SPSite site = new SPSite(currentSite.Url, systoken))
+                var systoken = currentSite.SystemAccount.UserToken;
+                using (var site = new SPSite(currentSite.Url, systoken))
                 {
-                    using (SPWeb web = site.OpenWeb())
+                    using (var web = site.OpenWeb())
                     {
                         action(web);
                     }
                 }
-
             });
         }
 
@@ -190,7 +196,35 @@ namespace TITcs.SharePoint.SSOM.Security
             action();
 
             impersonationContext.Undo();
+        }
 
+        /// <summary>
+        /// Executes the delegate with the rights of the specified account
+        /// </summary>
+        /// <param name="action">Action to execute under the user rights</param>
+        /// <param name="account">Account to execute. Must be in the form of DOMAIN\USER </param>
+        /// <param name="password">Password of the user</param>
+        public static void RunWithAccountAndPassword(Action action, string account, string password)
+        {
+            // safe checks
+            if (action == null) throw new ArgumentNullException("action");
+            if (string.IsNullOrWhiteSpace(account)) throw new ArgumentNullException("account");
+            if (string.IsNullOrWhiteSpace(password)) throw new ArgumentNullException("password");
+
+            var split = account.Split(new string[] { "\\" }, StringSplitOptions.RemoveEmptyEntries);
+            if (split == null || split.Length != 2) throw new ArgumentException("Account parameter is not in the DOMAIN\\USERNAME format");
+
+            var domain = split[0];
+            var username = split[1];
+
+            using (var windowsImpContext = new WindowsIdentityImpersonator(domain, username, password))
+            {
+                windowsImpContext.BeginImpersonate();
+
+                action();
+
+                windowsImpContext.EndImpersonate();
+            }
         }
     }
 }
