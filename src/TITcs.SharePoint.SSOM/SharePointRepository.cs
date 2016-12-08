@@ -364,11 +364,15 @@ namespace TITcs.SharePoint.SSOM
                     if (listItem.Fields.ContainsField(columnName))
                     {
                         var field = listItem.Fields.GetFieldByInternalName(columnName);
-                        var value = listItem[columnName];
 
-                        if (value != null)
+                        if (listItem[field.Id] != null || string.IsNullOrEmpty(field.DefaultValue))
                         {
-                            p.SetValue(entity, ValidateValueType(field, value));
+                            var value = listItem[field.Id];
+
+                            if (value != null)
+                            {
+                                p.SetValue(entity, ValidateValueType(field, value));
+                            }
                         }
 
                     }
