@@ -30,7 +30,7 @@ namespace TITcs.SharePoint.SSOM.Security
 
         public static void RunWithElevatedPrivilegesAndAccountSystem(HttpRequest request, Action<SPWeb> action)
         {
-            var rootUrl = string.Format("{0}://{1}", request.Url.Scheme, request.Url.Authority);
+            var rootUrl = $"{request.Url.Scheme}://{request.Url.Authority}";
 
             Logger.Logger.Debug("ImpersonateUser.RunWithCurrentRequestAndElevatedPrivilegesAndAccountSystem", "RootUrl: {0}", rootUrl);
 
@@ -55,7 +55,7 @@ namespace TITcs.SharePoint.SSOM.Security
         public static void RunWithCurrentRequestAndElevatedPrivilegesAndAccountSystem(Action<SPWeb> action)
         {
             var request = HttpContext.Current.Request;
-            var rootUrl = string.Format("{0}://{1}", request.Url.Scheme, request.Url.Authority);
+            var rootUrl = $"{request.Url.Scheme}://{request.Url.Authority}";
 
             Logger.Logger.Debug("ImpersonateUser.RunWithCurrentRequestAndElevatedPrivilegesAndAccountSystem", "RootUrl: {0}", rootUrl);
 
@@ -80,7 +80,7 @@ namespace TITcs.SharePoint.SSOM.Security
         public static void RunWithCurrentRequestAndElevatedPrivilegesAndAccountSystem(Action<SPSite> action)
         {
             var request = HttpContext.Current.Request;
-            var rootUrl = string.Format("{0}://{1}", request.Url.Scheme, request.Url.Authority);
+            var rootUrl = $"{request.Url.Scheme}://{request.Url.Authority}";
 
             SPSecurity.RunWithElevatedPrivileges(delegate ()
             {
