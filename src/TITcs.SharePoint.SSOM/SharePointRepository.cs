@@ -138,7 +138,7 @@ namespace TITcs.SharePoint.SSOM
 
             return result;
         }
-        protected int Insert(Fields<TEntity> fields)
+        protected int Insert(Fields<TEntity> fields, Action<SPListItem> afterInsertAction = null)
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Insert", $"List = {Title}, Fields = {string.Join(",", fields.ItemDictionary.Select(i => $"{i.Key} = {i.Value}").ToArray())}");
 
@@ -160,8 +160,11 @@ namespace TITcs.SharePoint.SSOM
 
                     item.Update();
 
+                    afterInsertAction?.Invoke(item);
+
                     _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
 
+                    
                     return item.ID;
                 }
 
@@ -206,7 +209,7 @@ namespace TITcs.SharePoint.SSOM
         {
             return ListUtils.GetList(_context.Web, Title);
         }
-        protected void Update(Fields<TEntity> fields)
+        protected void Update(Fields<TEntity> fields, Action<SPListItem> afterUpdateAction = null)
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Update", "List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => $"{i.Key} = {i.Value}")).ToArray());
 
@@ -237,6 +240,9 @@ namespace TITcs.SharePoint.SSOM
                     }
 
                     item.Update();
+
+                    afterUpdateAction?.Invoke(item);
+
                     _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
                 }
 
