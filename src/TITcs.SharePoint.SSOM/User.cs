@@ -57,5 +57,14 @@ namespace TITcs.SharePoint.SSOM
                 }).ToList()
             };
         }
+
+        public static User Current
+        {
+            get
+            {
+                User user = SPContext.Current.Web.CurrentUser;
+                return user;
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ namespace TITcs.SharePoint.SSOM
 {
     public class File
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public string Title { get; set; }
         public DateTime Created { get; set; }
@@ -20,6 +21,7 @@ namespace TITcs.SharePoint.SSOM
 
             return new File
             {
+                Id = Convert.ToInt32(file.Item["ID"]),
                 Name = file.Name,
                 Title = file.Title,
                 Created = file.TimeCreated,

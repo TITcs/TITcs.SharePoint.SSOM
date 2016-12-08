@@ -20,9 +20,13 @@ namespace TITcs.SharePoint.SSOM
         public uint PageSize { get; set; }
         public int NextPageIndex { get; set; }
         public ICollection<TEntity> Data { get; set; }
-        public SPListItemCollection OriginalData { get; set; }
+        private SPListItemCollection OriginalData { get; set; }
         public string PreviousPageQuery { get; set; }
         public string NextPageQuery { get; set; }
+        public int FirstPageIndex { get; set; }
+        public string FirstPageQuery { get; set; }
+        public int LastPageIndex { get; set; }
+        public string LastPageQuery { get; set; }
         public string CurrentPageSubtitle { get; set; }
         public IDictionary<int, string> PagingInfos { get; set; }
 
@@ -35,6 +39,10 @@ namespace TITcs.SharePoint.SSOM
             OriginalData = originalData;
             Data = data;
             TotalItems = originalData.Count;
+
+            if (pageSize > TotalItems)
+                pageSize = (uint)TotalItems;
+
             PageSize = pageSize;
             _numbersOfPage = GetNumbersOfPage();
 
@@ -44,13 +52,37 @@ namespace TITcs.SharePoint.SSOM
             NextPageIndex = GetNextPageIndex();
             PreviousPageQuery = GetPreviousPageQuery();
             CurrentPageSubtitle = GetCurrentPageSubtitle();
+
             PagingInfos = GetPagingInfos();
+
+            FirstPageQuery = GetFirstPageQuery();
+            LastPageQuery = GetLastPageQuery();
         }
 
         #endregion
 
         #region methods
 
+        private string GetFirstPageQuery()
+        {
+            FirstPageIndex = 0;
+
+            return string.Empty;
+        }
+        private string GetLastPageQuery()
+        {
+            var pagesCount = GetNumbersOfPage();
+
+            if (pagesCount == 1)
+                return string.Empty;
+
+            int index = (int)((PageSize * pagesCount) - PageSize) - 1;
+
+            if (index < 0)
+                index = 0;
+
+            return $"Paged=TRUE&p_ID={OriginalData[index].ID}";
+        }
         private string GetNextPageQuery()
         {
             var sb = new StringBuilder();
@@ -152,7 +184,7 @@ namespace TITcs.SharePoint.SSOM
                 }
             }
 
-            return page;
+            return CurrentPage = page;
         }
         private int GetNumbersOfPage()
         {
