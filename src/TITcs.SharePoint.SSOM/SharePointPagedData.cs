@@ -81,7 +81,7 @@ namespace TITcs.SharePoint.SSOM
             if (index < 0)
                 index = 0;
 
-            return $"Paged=TRUE&p_ID={OriginalData[index].ID}";
+            return OriginalData.Count > 0 ? $"Paged=TRUE&p_ID={OriginalData[index].ID}" : string.Empty;
         }
         private string GetNextPageQuery()
         {
