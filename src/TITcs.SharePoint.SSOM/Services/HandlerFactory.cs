@@ -14,7 +14,7 @@ namespace TITcs.SharePoint.SSOM.Services
     {
         #region fields and properties
 
-        private static List<Type> _handlerTypes = new List<Type>();
+        private static readonly List<Type> _handlerTypes = new List<Type>();
         private static SharePointServiceSection _serviceSection;
         public List<Type> HandlerTypes { get { return _handlerTypes; } }
 
@@ -24,18 +24,20 @@ namespace TITcs.SharePoint.SSOM.Services
 
         public HandlerFactory()
         {
-            List<Type> exportedTypes;
-            var hasLoadedTypes = true;
-            try 
+            var hasLoadedTypes = false;
+
+            try
             {
                 if (_handlerTypes == null || _handlerTypes.Count == 0)
                 {
-                    _serviceSection = (SharePointServiceSection) ConfigurationManager.GetSection("sharePointServices");
+                    _serviceSection = (SharePointServiceSection)ConfigurationManager.GetSection("sharePointServices");
 
                     if (_serviceSection != null)
                     {
                         foreach (ServiceRegistry service in _serviceSection.Services)
                         {
+                            List<Type> exportedTypes;
+
                             if (service.FilterType == FilterType.AssemblyName)
                             {
                                 if (string.IsNullOrEmpty(service.AssemblyName))
@@ -46,7 +48,8 @@ namespace TITcs.SharePoint.SSOM.Services
                                     .ExportedTypes.Where(i => i.BaseType != null && i.BaseType.Name == "ServiceBase")
                                     .ToList();
 
-                                _handlerTypes.AddRange(exportedTypes);
+                                AddIfNotExistsExportedTypes(exportedTypes);
+
                             }
                             else
                             {
@@ -56,7 +59,8 @@ namespace TITcs.SharePoint.SSOM.Services
                                     exportedTypes = AppDomain.CurrentDomain.GetAssemblies()
                                                                         .SelectMany(t => t.GetTypes())
                                                                         .Where(t => t.IsClass && t.IsPublic && t.Namespace == service.Namespace).ToList();
-                                    _handlerTypes.AddRange(exportedTypes);
+
+                                    AddIfNotExistsExportedTypes(exportedTypes);
 
                                     hasLoadedTypes = true;
                                 }
@@ -73,10 +77,19 @@ namespace TITcs.SharePoint.SSOM.Services
             }
         }
 
+        private static void AddIfNotExistsExportedTypes(List<Type> exportedTypes)
+        {
+            foreach (var exportedType in exportedTypes)
+            {
+                if (!_handlerTypes.Contains(exportedType))
+                    _handlerTypes.Add(exportedType);
+            }
+        }
+
         #endregion
 
         #region events and methods
-        
+
         public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
         {
             try
@@ -102,7 +115,7 @@ namespace TITcs.SharePoint.SSOM.Services
 
                     // TODO: IMPLEMENTAR CROSS DOMAIN POR ASSEMBLY
 
-                    var handler = (IHttpHandler) Activator.CreateInstance(type);
+                    var handler = (IHttpHandler)Activator.CreateInstance(type);
                     return handler;
                 }
 
