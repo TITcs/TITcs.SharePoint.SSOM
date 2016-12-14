@@ -28,6 +28,7 @@ namespace TITcs.SharePoint.SSOM
         public int LastPageIndex { get; set; }
         public string LastPageQuery { get; set; }
         public string CurrentPageSubtitle { get; set; }
+        public IDictionary<int, string> PagingInfos { get; set; }
 
         #endregion
 
@@ -51,6 +52,9 @@ namespace TITcs.SharePoint.SSOM
             NextPageIndex = GetNextPageIndex();
             PreviousPageQuery = GetPreviousPageQuery();
             CurrentPageSubtitle = GetCurrentPageSubtitle();
+
+            PagingInfos = GetPagingInfos();
+
             FirstPageQuery = GetFirstPageQuery();
             LastPageQuery = GetLastPageQuery();
         }
@@ -77,7 +81,7 @@ namespace TITcs.SharePoint.SSOM
             if (index < 0)
                 index = 0;
 
-            return $"Paged=TRUE&p_ID={OriginalData[index].ID}";
+            return OriginalData.Count > 0 ? $"Paged=TRUE&p_ID={OriginalData[index].ID}" : string.Empty;
         }
         private string GetNextPageQuery()
         {
@@ -110,7 +114,7 @@ namespace TITcs.SharePoint.SSOM
         private string GetCurrentPageSubtitle()
         {
             var sb = new StringBuilder();
-            sb.AppendFormat("Página {0} de {1}", GetCurrentPage(), _numbersOfPage);
+            sb.AppendFormat("Página {0} de {1}", OriginalData.Count > 0 && Data.Count > 0 ? GetCurrentPage() : 0, _numbersOfPage);
             return sb.ToString();
         }
         private int GetNextPageIndex()
@@ -134,15 +138,14 @@ namespace TITcs.SharePoint.SSOM
             }
             else
             {
-                nextPageIndex = OriginalData.OfType<SPListItem>().ToList<SPListItem>().FindIndex(i => i.ID == Data.OfType<SharePointItem>().ToList<SharePointItem>()[Data.Count - 1].Id);
+                var lastItemIndex = Data.Count - 1;
+                nextPageIndex = lastItemIndex >= 0 ? OriginalData.OfType<SPListItem>().ToList<SPListItem>().FindIndex(i => i.ID == Data.OfType<SharePointItem>().ToList<SharePointItem>()[lastItemIndex].Id) : 0;
             }
-
             return nextPageIndex;
         }
         private bool IsFirstPage()
         {
             var page = 1;
-
             for (int i = 1; i <= _numbersOfPage; i++)
             {
                 if (NextPageIndex <= ((i * PageSize) - 1))
@@ -151,7 +154,6 @@ namespace TITcs.SharePoint.SSOM
                     break;
                 }
             }
-
             return page == 1;
         }
         private bool IsLastPage()
@@ -186,8 +188,26 @@ namespace TITcs.SharePoint.SSOM
         }
         private int GetNumbersOfPage()
         {
-            var pagesCount = (double)TotalItems / PageSize;
-            return (int)(pagesCount % 1 == 0 ? pagesCount : pagesCount + 1);
+            // safe checks for page count
+            var pagesCount = TotalItems <= 0 ? 0 : (double)TotalItems / PageSize; // in case the search hasnt returned any results pagesCount equals 0
+            return (int)(pagesCount % 1 == 0 ? pagesCount : pagesCount + 1); // if the pagesCount is not an integer, adds 1 to it
+        }
+        private IDictionary<int, string> GetPagingInfos()
+        {
+            var result = new Dictionary<int, string>();
+            for (var i = 1; i <= _numbersOfPage; i++)
+            {
+                result.Add(i, GetPagingInfo(i));
+            }
+            return result;
+        }
+        private string GetPagingInfo(int index)
+        {
+            if (index == 1) return string.Empty;
+            var skip = (index - 1) * PageSize;
+            var lastPageItemIndex = (int)((skip > TotalItems ? TotalItems : skip) - 1); // transform to zero based arrays
+            var lastPageItemID = OriginalData.OfType<SPListItem>().ToList().ElementAt(lastPageItemIndex).ID;
+            return string.Format(@"Paged=TRUE&p_ID={0}", lastPageItemID);
         }
 
         #endregion

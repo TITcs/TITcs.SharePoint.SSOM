@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Web;
 using TITcs.SharePoint.SSOM.Utils;
 
 namespace TITcs.SharePoint.SSOM
@@ -15,20 +16,42 @@ namespace TITcs.SharePoint.SSOM
     {
         #region properties and fields
 
+        /// <summary>
+        /// Private reference for the context object
+        /// </summary>
         private readonly ISharePointContext _context;
+
+        /// <summary>
+        /// Public reference for the context object
+        /// </summary>
         public ISharePointContext Context => _context;
+
+        /// <summary>
+        /// Public reference for the Title property
+        /// </summary>
         public string Title { get; set; }
+
+        /// <summary>
+        /// Public reference for the RowLimit property
+        /// </summary>
         public uint RowLimit { get; set; }
 
         #endregion
 
         #region constructors
 
+        /// <summary>
+        /// Default constructor for the repository. Initializes the repository based on the current SPContext object
+        /// </summary>
         protected SharePointRepository()
             : this(SPContext.Current.Web)
         {
         }
 
+        /// <summary>
+        /// Initializes the repository based on a ISharepointContext object
+        /// </summary>
+        /// <param name="context">ISharePointContext object initialize the context</param>
         protected SharePointRepository(ISharePointContext context)
         {
             _context = context;
@@ -39,6 +62,10 @@ namespace TITcs.SharePoint.SSOM
             Logger.Logger.Debug("SharePointRepository.Constructor", "Title = {0}", Title);
         }
 
+        /// <summary>
+        /// Initializes the repository based on an SPWeb object.
+        /// </summary>
+        /// <param name="web">SPWeb object initialize the context</param>
         protected SharePointRepository(SPWeb web)
         {
             _context = new SharePointContext(web);
@@ -53,40 +80,22 @@ namespace TITcs.SharePoint.SSOM
 
         #region methods
 
-        protected TResult Call<TResult>(Func<TResult> method)
-        {
-            try
-            {
-                return method();
-            }
-            catch (Exception exception)
-            {
-                Logger.Logger.Unexpected("ServiceCache.Call", exception.Message);
-                throw;
-            }
-        }
-        protected void Exec(Action method)
-        {
-            try
-            {
-                method();
-            }
-            catch (Exception exception)
-            {
-                Logger.Logger.Unexpected("ServiceCache.Exec", exception.Message);
-                throw;
-            }
-        }
+        /// <summary>
+        /// Gets an item by its Id
+        /// </summary>
+        /// <param name="id">Id of the item to return</param>
+        /// <returns>Returns a domain object representing the SPListItem found</returns>
         public TEntity GetById(int id)
         {
+            // log execution
             Logger.Logger.Debug("SharePointRepository.GetById", "ID = {0}", id);
 
             TEntity result = Call(() =>
             {
                 using (_context.Web)
                 {
+                    // find target list
                     var list = _context.Web.Lists.TryGetList(Title);
-
                     if (list == null)
                         throw new Exception($"The list \"{Title}\" not found");
 
@@ -112,6 +121,12 @@ namespace TITcs.SharePoint.SSOM
 
             return result;
         }
+
+        /// <summary>
+        /// Gets an item by its Id
+        /// </summary>
+        /// <param name="id">Id of the item to return</param>
+        /// <returns>Returns the original SPListItem object found</returns>
         public SPListItem GetSPListItem(int id)
         {
             Logger.Logger.Debug("SharePointRepository.GetSPListItem", "ID = {0}", id);
@@ -138,6 +153,537 @@ namespace TITcs.SharePoint.SSOM
 
             return result;
         }
+
+        /// <summary>
+        /// Finds a folder based on the informed url pattern
+        /// </summary>
+        /// <param name="url">Url pattern of the folder</param>
+        /// <returns>Returns an SPFolder object</returns>
+        public SPFolder FindFolder(string url)
+        {
+            Logger.Logger.Debug("SharePointRepository.FindFolder", "Url = {0}", url);
+
+            SPFolder folder = default(SPFolder);
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(url)) { throw new ArgumentNullException("url"); }
+
+                var parts = url.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts != null && parts.Length > 0)
+                {
+                    var result = Call(() =>
+                    {
+                        using (_context.Web)
+                        {
+                            _context.Web.CacheAllSchema = false;
+
+                            // access source list
+                            var list = GetSourceList();
+
+                            if (list != null)
+                            {
+                                for (var i = 0; i < parts.Length; i++)
+                                {
+                                    var decodedUrl = HttpUtility.UrlDecode(parts[i]);
+                                    if (i == 0 || folder == null)
+                                    {
+                                        folder = list.RootFolder.SubFolders[decodedUrl];
+                                    }
+                                    else
+                                    {
+                                        folder = folder.SubFolders[decodedUrl];
+                                    }
+                                }
+                            }
+
+                            return folder;
+                        }
+                    });
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            return folder;
+        }
+
+        /// <summary>
+        /// Get all items that match the specified criteria
+        /// </summary>
+        /// <param name="pagingInfo">Paging info string returned from a previous execution</param>
+        /// <param name="pageSize">Page size for the query</param>
+        /// <param name="camlQuery">Search criteria in CAML format starting from the <Where> clause</param>
+        /// <returns>Returns paged list of domain objects</returns>
+        public SharePointPagedData<TEntity> GetAll(string pagingInfo, uint pageSize = 10, string camlQuery = null)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetAll", "PagingInfo = {0}, Query = {1}", pagingInfo, camlQuery);
+
+            SharePointPagedData<TEntity> result = Call(() =>
+            {
+                using (_context.Web)
+                {
+                    _context.Web.CacheAllSchema = false;
+
+                    // access source list
+                    var list = GetSourceList();
+
+                    // build all items query
+                    var query = new SPQuery();
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    var items = list.GetItems(query);
+                    var originalItems = items;
+
+                    // count total items
+                    var totalItems = originalItems.Count;
+
+                    // set new row limit
+                    RowLimit = pageSize > totalItems ? (uint)totalItems : pageSize;
+
+                    query = new SPQuery()
+                    {
+                        RowLimit = RowLimit
+                    };
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    // paged search
+                    if (!string.IsNullOrEmpty(pagingInfo))
+                    {
+                        query.ListItemCollectionPosition = new SPListItemCollectionPosition(pagingInfo);
+                    }
+
+                    // execute query
+                    items = list.GetItems(query);
+
+                    if (items.ListItemCollectionPosition != null && RowLimit > 0)
+                    {
+                        pagingInfo = items.ListItemCollectionPosition.PagingInfo;
+                    }
+                    else
+                    {
+                        pagingInfo = string.Empty;
+                    }
+
+                    return new SharePointPagedData<TEntity>(originalItems, PopulateItems(items), pagingInfo, RowLimit);
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Get all items all folders deep that match the specified criteria
+        /// </summary>
+        /// <param name="pagingInfo"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="camlQuery"></param>
+        /// <returns>Returns paged list of domain objects</returns>
+        public SharePointPagedData<TEntity> GetAllRecursive(string pagingInfo, uint pageSize = 10, string camlQuery = null)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetAllRecursive", "PagingInfo = {0}, PageSize = {1}, CamlQuery = {2}", pagingInfo, pageSize, camlQuery);
+
+            var result = Call(() =>
+            {
+                using (_context.Web)
+                {
+                    // disable schema caching
+                    _context.Web.CacheAllSchema = false;
+
+                    // access source list
+                    var list = GetSourceList();
+
+                    // build all items query that will return the TotalItems property
+                    var query = new SPQuery();
+
+                    // in case a camlQuery parameter was given
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    // execute all items query
+                    var items = list.GetItems(query);
+
+                    // keep record of the original dataset
+                    var originalItems = items;
+
+                    // count total items
+                    var totalItems = items.Count;
+
+                    // safe check for rowLimit
+                    RowLimit = pageSize > totalItems ? (uint)totalItems : pageSize;
+
+                    query = new SPQuery()
+                    {
+                        RowLimit = RowLimit,
+                        ViewAttributes = "Scope=\"RecursiveAll\"" // force recursive search
+                    };
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    // paged search
+                    if (!string.IsNullOrEmpty(pagingInfo))
+                    {
+                        query.ListItemCollectionPosition = new SPListItemCollectionPosition(pagingInfo);
+                    }
+
+                    // execute query with the search criteria
+                    items = list.GetItems(query);
+
+                    if (items.ListItemCollectionPosition != null && RowLimit > 0)
+                    {
+                        pagingInfo = items.ListItemCollectionPosition.PagingInfo;
+                    }
+                    else
+                    {
+                        pagingInfo = string.Empty;
+                    }
+
+                    return new SharePointPagedData<TEntity>(originalItems, PopulateItems(items), pagingInfo, RowLimit);
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Get all items all folders deep that match the specified criteria
+        /// </summary>
+        /// <param name="pagingInfo">Paging info string returned from a previous execution</param>
+        /// <param name="pageSize">Optional page size for the query</param>
+        /// <param name="camlQuery">Search criteria in CAML format starting from the <Where> clause</param>
+        /// <returns>Returns paged list of domain objects</returns>
+        public SharePointPagedData<TEntity> GetAllRecursive(string pagingInfo, Nullable<uint> pageSize, string camlQuery)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetAllRecursive", "PagingInfo = {0}, PageSize = {1}, CamlQuery = {2}", pagingInfo, pageSize, camlQuery);
+
+            var result = Call(() =>
+            {
+                using (_context.Web)
+                {
+                    // disable schema caching
+                    _context.Web.CacheAllSchema = false;
+
+                    // access source list
+                    var list = GetSourceList();
+
+                    // build all items query that will return the TotalItems property
+                    var query = new SPQuery();
+
+                    // in case a camlQuery parameter was given
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    // execute all items query
+                    var items = list.GetItems(query);
+
+                    // keep record of the original dataset
+                    var originalItems = items;
+
+                    // count total items
+                    var totalItems = items.Count;
+
+                    // safe check for rowLimit
+                    RowLimit = pageSize.HasValue ? (pageSize.Value > totalItems ? (uint)totalItems : pageSize.Value) : ((uint)totalItems);
+
+                    query = new SPQuery()
+                    {
+                        RowLimit = RowLimit,
+                        ViewAttributes = "Scope=\"RecursiveAll\"" // force recursive search
+                    };
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    // paged search
+                    if (!string.IsNullOrEmpty(pagingInfo))
+                    {
+                        query.ListItemCollectionPosition = new SPListItemCollectionPosition(pagingInfo);
+                    }
+
+                    // execute query with the search criteria
+                    items = list.GetItems(query);
+
+                    if (items.ListItemCollectionPosition != null && RowLimit > 0)
+                    {
+                        pagingInfo = items.ListItemCollectionPosition.PagingInfo;
+                    }
+                    else
+                    {
+                        pagingInfo = string.Empty;
+                    }
+
+                    return new SharePointPagedData<TEntity>(originalItems, PopulateItems(items), pagingInfo, RowLimit);
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Get all items from an specified folder and subfolders that match the specified criteria
+        /// </summary>
+        /// <param name="folder">Folder relative to list root folder. For example: if the list url pattern is Lists/Orders/US, the parameter should be US</param>
+        /// <param name="pagingInfo">Paging info string returned from a previous execution</param>
+        /// <param name="pageSize">Page size for the query</param>
+        /// <param name="camlQuery">Search criteria in CAML format starting from the <Where> clause</param>
+        /// <returns>Returns paged list of domain objects</returns>
+        public SharePointPagedData<TEntity> GetAllFromFolderRecursive(string folder, string pagingInfo = null, uint pageSize = 10, string camlQuery = null)
+        {
+            if (string.IsNullOrWhiteSpace(folder)) throw new ArgumentException("folder");
+
+            Logger.Logger.Debug("SharePointRepository.GetAllFromFolderRecursive", "PagingInfo = {0}, Query = {1}, Folder = {2}", pagingInfo, camlQuery, folder);
+
+            var result = Call(() =>
+            {
+                using (_context.Web)
+                {
+                    _context.Web.CacheAllSchema = false;
+
+                    // access source list
+                    var list = GetSourceList();
+
+                    // build all items query
+                    var query = new SPQuery();
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    var items = list.GetItems(query);
+                    var originalItems = items;
+
+                    // count total items
+                    var totalItems = items.Count;
+
+                    // set new row limit
+                    RowLimit = pageSize > totalItems ? (uint)totalItems : pageSize;
+
+                    query = new SPQuery()
+                    {
+                        RowLimit = RowLimit,
+                        ViewAttributes = "Scope=\"RecursiveAll\"",
+                        Folder = list.RootFolder.SubFolders[folder]
+                    };
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    // paged search
+                    if (!string.IsNullOrEmpty(pagingInfo))
+                    {
+                        query.ListItemCollectionPosition = new SPListItemCollectionPosition(pagingInfo);
+                    }
+
+                    // execute query
+                    items = list.GetItems(query);
+
+                    if (items.ListItemCollectionPosition != null && RowLimit > 0)
+                    {
+                        pagingInfo = items.ListItemCollectionPosition.PagingInfo;
+                    }
+                    else
+                    {
+                        pagingInfo = string.Empty;
+                    }
+
+                    return new SharePointPagedData<TEntity>(originalItems, PopulateItems(items), pagingInfo, RowLimit);
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Get all items from an specified folder that match the specified criteria
+        /// </summary>
+        /// <param name="folder">Folder relative to list root. For example: if the folder is Lists/Orders/US, the parameter should be US</param>
+        /// <param name="pagingInfo">Paging info string returned from a previous execution</param>
+        /// <param name="pageSize">Page size for the query</param>
+        /// <param name="camlQuery">Search criteria in CAML format starting from the <Where> clause</param>
+        /// <returns>Returns paged list of domain objects</returns>
+        public SharePointPagedData<TEntity> GetAllFromFolder(string folder, string pagingInfo = null, uint pageSize = 10, string camlQuery = null)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetAllFromFolder", "Folder = {0}, PagingInfo = {1}, PageSize = {2}, CamlQuery = {3}", folder, pagingInfo, pageSize, camlQuery);
+
+            SharePointPagedData<TEntity> result = Call(() =>
+            {
+                using (_context.Web)
+                {
+                    // disable schema caching
+                    _context.Web.CacheAllSchema = false;
+
+                    // access source list
+                    var list = GetSourceList();
+
+                    // build all items query
+                    var spQuery = new SPQuery();
+                    var spFolder = FindFolder(folder);
+                    if (spFolder != null)
+                    {
+                        spQuery.Folder = spFolder;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(camlQuery))
+                        spQuery.Query = camlQuery;
+
+                    // execute all items query
+                    var items = list.GetItems(spQuery);
+                    var originalItems = items;
+
+                    // count total items
+                    var totalItems = items.Count;
+
+                    // set new row limit
+                    RowLimit = pageSize > totalItems ? (uint)totalItems : pageSize;
+
+                    if (spFolder != null)
+                    {
+                        spQuery = new SPQuery()
+                        {
+                            RowLimit = RowLimit,
+                            Folder = spFolder
+                        };
+                    }
+                    else
+                    {
+                        spQuery = new SPQuery()
+                        {
+                            RowLimit = RowLimit
+                        };
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(camlQuery))
+                        spQuery.Query = camlQuery;
+
+                    // paged search
+                    if (!string.IsNullOrWhiteSpace(pagingInfo))
+                    {
+                        spQuery.ListItemCollectionPosition = new SPListItemCollectionPosition(pagingInfo);
+                    }
+
+                    // execute actual query
+                    items = list.GetItems(spQuery);
+                    if (items.ListItemCollectionPosition != null && RowLimit > 0)
+                    {
+                        pagingInfo = items.ListItemCollectionPosition.PagingInfo;
+                    }
+                    else
+                    {
+                        pagingInfo = string.Empty;
+                    }
+
+                    return new SharePointPagedData<TEntity>(originalItems, PopulateItems(items), pagingInfo, RowLimit);
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Get all items that match the specified criteria
+        /// </summary>
+        /// <param name="camlQuery">Search criteria in CAML format starting from the <Where> clause</param>
+        /// <returns>Returns list of domain objects</returns>
+        public ICollection<TEntity> GetAll(string camlQuery = null)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetAll", "Query = {0}", camlQuery);
+
+            ICollection<TEntity> result = Call(() =>
+            {
+                using (_context.Web)
+                {
+                    _context.Web.CacheAllSchema = false;
+
+                    var list = GetSourceList();
+
+                    SPQuery query = new SPQuery();
+
+                    if (RowLimit > 0)
+                        query.RowLimit = RowLimit;
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    var items = list.GetItems(query);
+
+                    var entities = PopulateItems(items);
+
+                    return entities;
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Get all items that match the specified criteria
+        /// </summary>
+        /// <param name="camlQuery">Search criteria in CAML format starting from the <Where> clause</param>
+        /// <returns>Returns list of domain objects</returns>
+        public ICollection<TEntity> GetAllRecursive(string camlQuery = null)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetAll", "Query = {0}", camlQuery);
+
+            ICollection<TEntity> result = Call(() =>
+            {
+                using (_context.Web)
+                {
+                    _context.Web.CacheAllSchema = false;
+
+                    var list = GetSourceList();
+
+                    SPQuery query = new SPQuery();
+
+                    query.ViewAttributes = "Scope=\"RecursiveAll\"";
+
+                    if (RowLimit > 0)
+                        query.RowLimit = RowLimit;
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    var items = list.GetItems(query);
+
+                    var entities = PopulateItems(items);
+
+                    return entities;
+                }
+            });
+
+            return result;
+        }
+
+        #region protected and private methods
+
+        protected TResult Call<TResult>(Func<TResult> method)
+        {
+            try
+            {
+                return method();
+            }
+            catch (Exception exception)
+            {
+                Logger.Logger.Unexpected("ServiceCache.Call", exception.Message);
+                throw;
+            }
+        }
+        protected void Exec(Action method)
+        {
+            try
+            {
+                method();
+            }
+            catch (Exception exception)
+            {
+                Logger.Logger.Unexpected("ServiceCache.Exec", exception.Message);
+                throw;
+            }
+        }
         protected int Insert(Fields<TEntity> fields, Action<SPListItem> afterInsertAction = null)
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Insert", $"List = {Title}, Fields = {string.Join(",", fields.ItemDictionary.Select(i => $"{i.Key} = {i.Value}").ToArray())}");
@@ -155,7 +701,9 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
-                         ValidateFieldItemDictionary(field, item);
+                        var columnName = GetFieldColumn(typeof(TEntity), field.Key);
+
+                        ValidateFieldItemDictionary(field, item);
                     }
 
                     item.Update();
@@ -164,7 +712,7 @@ namespace TITcs.SharePoint.SSOM
 
                     _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
 
-                    
+
                     return item.ID;
                 }
 
@@ -178,24 +726,30 @@ namespace TITcs.SharePoint.SSOM
                 return;
             }
 
-            var columnName = getFieldColumn(typeof(TEntity), field.Key);
+            var columnName = GetFieldColumn(typeof(TEntity), field.Key);
 
             if (field.Value is IEnumerable<Lookup>)
             {
                 var fieldValues = new SPFieldLookupValueCollection();
 
-                foreach (var keyValuePair in (IEnumerable<Lookup>) field.Value)
+                var values = (IEnumerable<Lookup>)field.Value;
+
+                if (values != null)
                 {
-                    fieldValues.Add(new SPFieldLookupValue
+                    foreach (var keyValuePair in values)
                     {
-                        LookupId = keyValuePair.Id
-                    });
+                        fieldValues.Add(new SPFieldLookupValue
+                        {
+                            LookupId = keyValuePair.Id
+                        });
+                    }
+                    listItem[columnName] = fieldValues;
+                    return;
                 }
-                listItem[columnName] = fieldValues;
-                return;
             }
 
             var lookup = field.Value as Lookup;
+
             if (lookup != null)
             {
                 listItem[columnName] = lookup.Id;
@@ -236,7 +790,12 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
+                        var columnName = GetFieldColumn(typeof(TEntity), field.Key);
+
                         ValidateFieldItemDictionary(field, item);
+
+                        if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
+                            item[columnName] = field.Value;
                     }
 
                     item.Update();
@@ -248,99 +807,9 @@ namespace TITcs.SharePoint.SSOM
 
             });
         }
-        private string getFieldColumn(Type type, string columnName)
+        private string GetFieldColumn(Type type, string columnName)
         {
             return type.GetProperties().Single(p => p.Name == columnName).GetCustomAttribute<SharePointFieldAttribute>().Name;
-        }
-        public SharePointPagedData<TEntity> GetAll(string pagingInfo, uint pageSize = 10, string camlQuery = null)
-        {
-            Logger.Logger.Debug("SharePointRepository.GetAll", "PagingInfo = {0}, Query = {1}", pagingInfo, camlQuery);
-
-            var result = Call(() =>
-            {
-                using (_context.Web)
-                {
-                    _context.Web.CacheAllSchema = false;
-
-                    // access source list
-                    var list = GetSourceList();
-
-                    // build all items query
-                    var query = new SPQuery();
-
-                    if (!string.IsNullOrEmpty(camlQuery))
-                        query.Query = camlQuery;
-
-                    var items = list.GetItems(query);
-                    var originalItems = items;
-
-                    // count total items
-                    var totalItems = items.Count;
-
-                    // set new row limit
-                    RowLimit = pageSize > totalItems ? (uint)totalItems : pageSize;
-
-                    query = new SPQuery()
-                    {
-                        RowLimit = RowLimit
-                    };
-
-                    if (!string.IsNullOrEmpty(camlQuery))
-                        query.Query = camlQuery;
-
-                    // paged search
-                    if (!string.IsNullOrEmpty(pagingInfo))
-                    {
-                        query.ListItemCollectionPosition = new SPListItemCollectionPosition(pagingInfo);
-                    }
-
-                    // execute query
-                    items = list.GetItems(query);
-
-                    if (items.ListItemCollectionPosition != null && RowLimit > 0)
-                    {
-                        pagingInfo = items.ListItemCollectionPosition.PagingInfo;
-                    }
-                    else
-                    {
-                        pagingInfo = string.Empty;
-                    }
-
-                    return new SharePointPagedData<TEntity>(originalItems, PopulateItems(items), pagingInfo, RowLimit);
-                }
-            });
-
-            return result;
-        }
-        public ICollection<TEntity> GetAll(string camlQuery = null)
-        {
-            Logger.Logger.Debug("SharePointRepository.GetAll", "Query = {0}", camlQuery);
-
-            ICollection<TEntity> result = Call(() =>
-            {
-                using (_context.Web)
-                {
-                    _context.Web.CacheAllSchema = false;
-
-                    var list = GetSourceList();
-
-                    SPQuery query = new SPQuery();
-
-                    if (RowLimit > 0)
-                        query.RowLimit = RowLimit;
-
-                    if (!string.IsNullOrEmpty(camlQuery))
-                        query.Query = camlQuery;
-
-                    var items = list.GetItems(query);
-
-                    var entities = PopulateItems(items);
-
-                    return entities;
-                }
-            });
-
-            return result;
         }
         private ICollection<TEntity> PopulateItems(SPListItemCollection items)
         {
@@ -357,43 +826,96 @@ namespace TITcs.SharePoint.SSOM
             }
             return entities;
         }
+        private ICollection<TEntity> PopulateItems(ICollection<SPListItem> items)
+        {
+            ICollection<TEntity> entities = new Collection<TEntity>();
+
+            if (items.Count > 0)
+            {
+                foreach (var item in items)
+                {
+                    var entity = (TEntity)Activator.CreateInstance(typeof(TEntity));
+                    SetProperties(entity, item);
+                    entities.Add(entity);
+                }
+            }
+            return entities;
+        }
         private void SetProperties(TEntity entity, SPListItem listItem)
         {
+            const string FILE_SYSTEM_OBJECT_TYPE = "FileSystemObjectType";
             typeof(TEntity).GetProperties().ToList().ForEach(p =>
             {
                 var customAttribute = p.GetCustomAttribute<SharePointFieldAttribute>();
-
                 if (customAttribute != null)
                 {
-                    var columnName = p.GetCustomAttribute<SharePointFieldAttribute>().Name;
+                    var columnName = customAttribute.Name;
 
-                    if (listItem.Fields.ContainsField(columnName))
+                    // in case there is a propetry FileSystemObjectType on the TEntity object
+                    if (string.Compare(columnName, FILE_SYSTEM_OBJECT_TYPE) == 0)
                     {
-                        var field = listItem.Fields.GetFieldByInternalName(columnName);
-
-                        if (listItem[field.Id] != null || string.IsNullOrEmpty(field.DefaultValue))
+                        if (p.PropertyType == typeof(string))
+                            p.SetValue(entity, listItem.FileSystemObjectType.ToString());
+                    }
+                    else
+                    {
+                        if (listItem.Fields.ContainsField(columnName))
                         {
-                            var value = listItem[field.Id];
+                            var field = listItem.Fields.GetFieldByInternalName(columnName);
+
+                            var value = TryGetValue(listItem, field);
 
                             if (value != null)
                             {
                                 p.SetValue(entity, ValidateValueType(field, value));
                             }
                         }
-
-                    }
-                    else
-                    {
-                        if (columnName.Equals("File"))
+                        else
                         {
-                            p.SetValue(entity, ValidateValueTypeFile(listItem.File));
+                            if (columnName.Equals("File"))
+                            {
+                                p.SetValue(entity, ValidateValueTypeFile(listItem.File));
+
+                            }
                         }
                     }
                 }
-
             });
-
         }
+
+        private object TryGetValue(SPListItem listItem, SPField field)
+        {
+            try
+            {
+                if (listItem[field.Id] != null || string.IsNullOrEmpty(field.DefaultValue))
+                {
+                    return listItem[field.Id];
+                }
+
+                return null;
+            }
+            catch (Exception e)
+            {
+                Logger.Logger.Debug("SharePointRepository.TryGetValue", "Column Name = {0}, Error = {1}", field.InternalName, e.Message);
+                return null;
+            }
+        }
+
+        private void SetValueToListItem(TEntity entity, SPListItem listItem, PropertyInfo p, string columnName)
+        {
+            var field = listItem.Fields.GetFieldByInternalName(columnName);
+
+            if (listItem[field.Id] != null || string.IsNullOrEmpty(field.DefaultValue))
+            {
+                var value = listItem[field.Id];
+
+                if (value != null)
+                {
+                    p.SetValue(entity, ValidateValueType(field, value));
+                }
+            }
+        }
+
         private object ValidateValueTypeFile(SPFile file)
         {
             if (file == null)
@@ -771,6 +1293,7 @@ namespace TITcs.SharePoint.SSOM
         }
 
         #endregion
-    }
 
+        #endregion
+    }
 }
