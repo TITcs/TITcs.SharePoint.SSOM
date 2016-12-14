@@ -701,7 +701,6 @@ namespace TITcs.SharePoint.SSOM
 
                     foreach (var field in fields.ItemDictionary)
                     {
-
                         var columnName = GetFieldColumn(typeof(TEntity), field.Key);
 
                         ValidateFieldItemDictionary(field, item);
@@ -733,18 +732,24 @@ namespace TITcs.SharePoint.SSOM
             {
                 var fieldValues = new SPFieldLookupValueCollection();
 
-                foreach (var keyValuePair in (IEnumerable<Lookup>)field.Value)
+                var values = (IEnumerable<Lookup>)field.Value;
+
+                if (values != null)
                 {
-                    fieldValues.Add(new SPFieldLookupValue
+                    foreach (var keyValuePair in values)
                     {
-                        LookupId = keyValuePair.Id
-                    });
+                        fieldValues.Add(new SPFieldLookupValue
+                        {
+                            LookupId = keyValuePair.Id
+                        });
+                    }
+                    listItem[columnName] = fieldValues;
+                    return;
                 }
-                listItem[columnName] = fieldValues;
-                return;
             }
 
             var lookup = field.Value as Lookup;
+
             if (lookup != null)
             {
                 listItem[columnName] = lookup.Id;
@@ -787,27 +792,10 @@ namespace TITcs.SharePoint.SSOM
                     {
                         var columnName = GetFieldColumn(typeof(TEntity), field.Key);
 
-                        // lógica de atualização de campo UserMulti e afins
-                        if (field.Value is IEnumerable<Lookup>)
-                        {
-                            var fieldValues = new SPFieldLookupValueCollection();
-                            var _multi = (IEnumerable<Lookup>)field.Value;
-                            if (_multi != null)
-                            {
-                                foreach (var keyValuePair in _multi)
-                                {
-                                    fieldValues.Add(new SPFieldLookupValue
-                                    {
-                                        LookupId = keyValuePair.Id
-                                    });
-                                }
-                                item[columnName] = fieldValues;
-                                continue;
-                            }
-                        }
+                        ValidateFieldItemDictionary(field, item);
+
                         if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
                             item[columnName] = field.Value;
-                        ValidateFieldItemDictionary(field, item);
                     }
 
                     item.Update();
@@ -874,7 +862,9 @@ namespace TITcs.SharePoint.SSOM
                         if (listItem.Fields.ContainsField(columnName))
                         {
                             var field = listItem.Fields.GetFieldByInternalName(columnName);
-                            var value = listItem[columnName];
+
+                            var value = TryGetValue(listItem, field);
+
                             if (value != null)
                             {
                                 p.SetValue(entity, ValidateValueType(field, value));
@@ -886,34 +876,46 @@ namespace TITcs.SharePoint.SSOM
                             {
                                 p.SetValue(entity, ValidateValueTypeFile(listItem.File));
 
-                                if (listItem.Fields.ContainsField(columnName))
-                                {
-                                    var field = listItem.Fields.GetFieldByInternalName(columnName);
-
-                                    if (listItem[field.Id] != null || string.IsNullOrEmpty(field.DefaultValue))
-                                    {
-                                        var value = listItem[field.Id];
-
-                                        if (value != null)
-                                        {
-                                            p.SetValue(entity, ValidateValueType(field, value));
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    if (columnName.Equals("File"))
-                                    {
-                                        p.SetValue(entity, ValidateValueTypeFile(listItem.File));
-                                    }
-                                }
                             }
-
                         }
                     }
                 }
             });
         }
+
+        private object TryGetValue(SPListItem listItem, SPField field)
+        {
+            try
+            {
+                if (listItem[field.Id] != null || string.IsNullOrEmpty(field.DefaultValue))
+                {
+                    return listItem[field.Id];
+                }
+
+                return null;
+            }
+            catch (Exception e)
+            {
+                Logger.Logger.Debug("SharePointRepository.TryGetValue", "Column Name = {0}, Error = {1}", field.InternalName, e.Message);
+                return null;
+            }
+        }
+
+        private void SetValueToListItem(TEntity entity, SPListItem listItem, PropertyInfo p, string columnName)
+        {
+            var field = listItem.Fields.GetFieldByInternalName(columnName);
+
+            if (listItem[field.Id] != null || string.IsNullOrEmpty(field.DefaultValue))
+            {
+                var value = listItem[field.Id];
+
+                if (value != null)
+                {
+                    p.SetValue(entity, ValidateValueType(field, value));
+                }
+            }
+        }
+
         private object ValidateValueTypeFile(SPFile file)
         {
             if (file == null)
