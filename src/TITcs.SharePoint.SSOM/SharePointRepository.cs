@@ -981,33 +981,41 @@ namespace TITcs.SharePoint.SSOM
                 {
                     var columnName = customAttribute.Name;
 
-                    // in case there is a propetry FileSystemObjectType on the TEntity object
-                    if (string.Compare(columnName, FILE_SYSTEM_OBJECT_TYPE) == 0)
+                    try
                     {
-                        if (p.PropertyType == typeof(string))
-                            p.SetValue(entity, listItem.FileSystemObjectType.ToString());
-                    }
-                    else
-                    {
-                        if (listItem.Fields.ContainsField(columnName))
+                        // in case there is a propetry FileSystemObjectType on the TEntity object
+                        if (string.Compare(columnName, FILE_SYSTEM_OBJECT_TYPE) == 0)
                         {
-                            var field = listItem.Fields.GetFieldByInternalName(columnName);
-
-                            var value = TryGetValue(listItem, field);
-
-                            if (value != null)
-                            {
-                                p.SetValue(entity, ValidateValueType(field, value));
-                            }
+                            if (p.PropertyType == typeof(string))
+                                p.SetValue(entity, listItem.FileSystemObjectType.ToString());
                         }
                         else
                         {
-                            if (columnName.Equals("File"))
+                            if (listItem.Fields.ContainsField(columnName))
                             {
-                                p.SetValue(entity, ValidateValueTypeFile(listItem.File));
+                                var field = listItem.Fields.GetFieldByInternalName(columnName);
 
+                                var value = TryGetValue(listItem, field);
+
+                                if (value != null)
+                                {
+                                    p.SetValue(entity, ValidateValueType(field, value));
+                                }
+                            }
+                            else
+                            {
+                                if (columnName.Equals("File"))
+                                {
+                                    p.SetValue(entity, ValidateValueTypeFile(listItem.File));
+
+                                }
                             }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Logger.Debug("SharePointRepository.SetProperties", "Column Name: {0}, Error: {1}", columnName, e.Message);
+                        throw;
                     }
                 }
             });
