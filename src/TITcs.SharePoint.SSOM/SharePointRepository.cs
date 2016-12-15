@@ -684,6 +684,10 @@ namespace TITcs.SharePoint.SSOM
                 throw;
             }
         }
+        protected int Insert(Fields<TEntity> fields)
+        {
+            return Insert(fields, null);
+        }
         protected int Insert(Fields<TEntity> fields, Action<SPListItem> afterInsertAction = null)
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Insert", $"List = {Title}, Fields = {string.Join(",", fields.ItemDictionary.Select(i => $"{i.Key} = {i.Value}").ToArray())}");
@@ -712,53 +716,10 @@ namespace TITcs.SharePoint.SSOM
 
                     _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
 
-
                     return item.ID;
                 }
-
             });
         }
-
-        private void ValidateFieldItemDictionary(KeyValuePair<string, object> field, SPListItem listItem)
-        {
-            if (field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return;
-            }
-
-            var columnName = GetFieldColumn(typeof(TEntity), field.Key);
-
-            if (field.Value is IEnumerable<Lookup>)
-            {
-                var fieldValues = new SPFieldLookupValueCollection();
-
-                var values = (IEnumerable<Lookup>)field.Value;
-
-                if (values != null)
-                {
-                    foreach (var keyValuePair in values)
-                    {
-                        fieldValues.Add(new SPFieldLookupValue
-                        {
-                            LookupId = keyValuePair.Id
-                        });
-                    }
-                    listItem[columnName] = fieldValues;
-                    return;
-                }
-            }
-
-            var lookup = field.Value as Lookup;
-
-            if (lookup != null)
-            {
-                listItem[columnName] = lookup.Id;
-                return;
-            }
-
-            listItem[columnName] = field.Value;
-        }
-
         protected SPList GetSourceList()
         {
             return ListUtils.GetList(_context.Web, Title);
@@ -807,6 +768,175 @@ namespace TITcs.SharePoint.SSOM
 
             });
         }
+        protected void Delete(int id)
+        {
+            Logger.Logger.Information("SharePointRepository<TEntity>.Delete", $"List = {Title}, ID = {id}");
+
+            Exec(() =>
+            {
+                using (_context.Web)
+                {
+                    var list = GetSourceList();
+
+                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = true;
+
+                    var item = list.GetItemById(id);
+
+                    item.Delete();
+
+                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
+                }
+            });
+        }
+        protected File Upload(string fileName, Stream stream, Fields<TEntity> fields = null, int maxLength = 4000000)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                throw new Exception("The file name can not be null.");
+
+            if (stream.Length > maxLength)
+                throw new Exception($"The maximum file size is {ConvertBytesToMegabytes(maxLength)}mb");
+
+            string ext = Path.GetExtension(fileName).ToLower();
+
+            fileName = fileName.Replace(" ", "-");
+
+            return Call(() =>
+            {
+                using (_context.Web)
+                {
+                    var list = GetSourceList();
+
+                    var fileRef = $"{list.RootFolder.ServerRelativeUrl}/{fileName}";
+
+                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = true;
+
+                    var spFile = list.RootFolder.Files.Add(fileRef, stream, true);
+
+                    if (fields != null)
+                    {
+                        foreach (var field in fields.ItemDictionary)
+                        {
+                            ValidateFieldItemDictionary(field, spFile.Item);
+                        }
+
+                        spFile.Item.Update();
+                    }
+
+                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
+
+                    var file = new File
+                    {
+                        Id = Convert.ToInt32(spFile.Item["ID"]),
+                        Url = fileRef,
+                        Name = fileName,
+                        Length = stream.Length,
+                        Created = DateTime.Now,
+                        Extension = ext,
+                        Title = fileName
+                    };
+
+                    return file;
+                }
+            });
+        }
+        protected File UploadImage(string fileName, Stream stream, Fields<TEntity> fields = null, int maxLength = 4000000)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                throw new Exception("The file name can not be null.");
+
+            if (stream.Length > maxLength)
+                throw new Exception($"The maximum file size is {ConvertBytesToMegabytes(maxLength)}mb");
+
+            string ext = Path.GetExtension(fileName).ToLower();
+
+            if (ext == null || (ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".tif" && ext != ".gif"))
+                throw new Exception("The image is not in the correct format. The allowed formats are: gif, jpg, png, bmp, tif e jpeg.");
+
+            fileName = fileName.Replace(" ", "-");
+
+            return Call(() =>
+            {
+                using (_context.Web)
+                {
+                    var list = GetSourceList();
+
+                    var fileRef = $"{list.RootFolder.ServerRelativeUrl}/{fileName}";
+
+                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
+                    _context.Web.AllowUnsafeUpdates = true;
+
+                    var spFile = list.RootFolder.Files.Add(fileRef, stream, true);
+
+                    if (fields != null)
+                    {
+                        foreach (var field in fields.ItemDictionary)
+                        {
+                            ValidateFieldItemDictionary(field, spFile.Item);
+                        }
+
+                        spFile.Item.Update();
+
+                    }
+
+                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
+
+                    var file = new File
+                    {
+                        Id = Convert.ToInt32(spFile.Item["ID"]),
+                        Url = fileRef,
+                        Name = fileName,
+                        Length = stream.Length,
+                        Created = DateTime.Now,
+                        Extension = ext,
+                        Title = fileName
+                    };
+
+                    return file;
+                }
+            });
+        }
+
+        private void ValidateFieldItemDictionary(KeyValuePair<string, object> field, SPListItem listItem)
+        {
+            if (field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return;
+            }
+
+            var columnName = GetFieldColumn(typeof(TEntity), field.Key);
+
+            if (field.Value is IEnumerable<Lookup>)
+            {
+                var fieldValues = new SPFieldLookupValueCollection();
+
+                var values = (IEnumerable<Lookup>)field.Value;
+
+                if (values != null)
+                {
+                    foreach (var keyValuePair in values)
+                    {
+                        fieldValues.Add(new SPFieldLookupValue
+                        {
+                            LookupId = keyValuePair.Id
+                        });
+                    }
+                    listItem[columnName] = fieldValues;
+                    return;
+                }
+            }
+
+            var lookup = field.Value as Lookup;
+
+            if (lookup != null)
+            {
+                listItem[columnName] = lookup.Id;
+                return;
+            }
+
+            listItem[columnName] = field.Value;
+        }        
         private string GetFieldColumn(Type type, string columnName)
         {
             return type.GetProperties().Single(p => p.Name == columnName).GetCustomAttribute<SharePointFieldAttribute>().Name;
@@ -882,7 +1012,6 @@ namespace TITcs.SharePoint.SSOM
                 }
             });
         }
-
         private object TryGetValue(SPListItem listItem, SPField field)
         {
             try
@@ -900,7 +1029,6 @@ namespace TITcs.SharePoint.SSOM
                 return null;
             }
         }
-
         private void SetValueToListItem(TEntity entity, SPListItem listItem, PropertyInfo p, string columnName)
         {
             var field = listItem.Fields.GetFieldByInternalName(columnName);
@@ -915,7 +1043,6 @@ namespace TITcs.SharePoint.SSOM
                 }
             }
         }
-
         private object ValidateValueTypeFile(SPFile file)
         {
             if (file == null)
@@ -1157,136 +1284,7 @@ namespace TITcs.SharePoint.SSOM
             }
 
             throw new Exception($"Type \"{field.Type}\" was not implemented.");
-        }
-        protected void Delete(int id)
-        {
-            Logger.Logger.Information("SharePointRepository<TEntity>.Delete", $"List = {Title}, ID = {id}");
-
-            Exec(() =>
-            {
-                using (_context.Web)
-                {
-                    var list = GetSourceList();
-
-                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
-                    _context.Web.AllowUnsafeUpdates = true;
-
-                    var item = list.GetItemById(id);
-
-                    item.Delete();
-
-                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
-                }
-            });
-        }
-        protected File Upload(string fileName, Stream stream, Fields<TEntity> fields = null, int maxLength = 4000000)
-        {
-            if (string.IsNullOrEmpty(fileName))
-                throw new Exception("The file name can not be null.");
-
-            if (stream.Length > maxLength)
-                throw new Exception($"The maximum file size is {ConvertBytesToMegabytes(maxLength)}mb");
-
-            string ext = Path.GetExtension(fileName).ToLower();
-
-            fileName = fileName.Replace(" ", "-");
-
-            return Call(() =>
-            {
-                using (_context.Web)
-                {
-                    var list = GetSourceList();
-
-                    var fileRef = $"{list.RootFolder.ServerRelativeUrl}/{fileName}";
-
-                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
-                    _context.Web.AllowUnsafeUpdates = true;
-
-                    var spFile = list.RootFolder.Files.Add(fileRef, stream, true);
-
-                    if (fields != null)
-                    {
-                        foreach (var field in fields.ItemDictionary)
-                        {
-                            ValidateFieldItemDictionary(field, spFile.Item);
-                        }
-
-                        spFile.Item.Update();
-                    }
-
-                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
-
-                    var file = new File
-                    {
-                        Id = Convert.ToInt32(spFile.Item["ID"]),
-                        Url = fileRef,
-                        Name = fileName,
-                        Length = stream.Length,
-                        Created = DateTime.Now,
-                        Extension = ext,
-                        Title = fileName
-                    };
-
-                    return file;
-                }
-            });
-        }
-        protected File UploadImage(string fileName, Stream stream, Fields<TEntity> fields = null, int maxLength = 4000000)
-        {
-            if (string.IsNullOrEmpty(fileName))
-                throw new Exception("The file name can not be null.");
-
-            if (stream.Length > maxLength)
-                throw new Exception($"The maximum file size is {ConvertBytesToMegabytes(maxLength)}mb");
-
-            string ext = Path.GetExtension(fileName).ToLower();
-
-            if (ext == null || (ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".tif" && ext != ".gif"))
-                throw new Exception("The image is not in the correct format. The allowed formats are: gif, jpg, png, bmp, tif e jpeg.");
-
-            fileName = fileName.Replace(" ", "-");
-
-            return Call(() =>
-            {
-                using (_context.Web)
-                {
-                    var list = GetSourceList();
-
-                    var fileRef = $"{list.RootFolder.ServerRelativeUrl}/{fileName}";
-
-                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
-                    _context.Web.AllowUnsafeUpdates = true;
-
-                    var spFile = list.RootFolder.Files.Add(fileRef, stream, true);
-
-                    if (fields != null)
-                    {
-                        foreach (var field in fields.ItemDictionary)
-                        {
-                            ValidateFieldItemDictionary(field, spFile.Item);
-                        }
-
-                        spFile.Item.Update();
-
-                    }
-
-                    _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
-
-                    var file = new File
-                    {
-                        Id = Convert.ToInt32(spFile.Item["ID"]),
-                        Url = fileRef,
-                        Name = fileName,
-                        Length = stream.Length,
-                        Created = DateTime.Now,
-                        Extension = ext,
-                        Title = fileName
-                    };
-
-                    return file;
-                }
-            });
-        }
+        }        
         private double ConvertBytesToMegabytes(long bytes)
         {
             return (bytes / 1024f) / 1024f;
