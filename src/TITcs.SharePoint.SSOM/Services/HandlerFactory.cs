@@ -14,66 +14,75 @@ namespace TITcs.SharePoint.SSOM.Services
     {
         #region fields and properties
 
+        private static readonly object _lock = new object();
         private static readonly List<Type> _handlerTypes = new List<Type>();
         private static SharePointServiceSection _serviceSection;
-        public List<Type> HandlerTypes { get { return _handlerTypes; } }
+        public static List<Type> HandlerTypes { get { return _handlerTypes; } }
 
         #endregion
 
         #region constructors
 
-        public HandlerFactory()
+        static HandlerFactory()
         {
-            var hasLoadedTypes = false;
-
-            try
+            lock (_lock)
             {
-                if (_handlerTypes == null || _handlerTypes.Count == 0)
+                var hasLoadedTypes = false;
+
+                try
                 {
-                    _serviceSection = (SharePointServiceSection)ConfigurationManager.GetSection("sharePointServices");
-
-                    if (_serviceSection != null)
+                    if (_handlerTypes == null || _handlerTypes.Count == 0)
                     {
-                        foreach (ServiceRegistry service in _serviceSection.Services)
+                        // get services from web.config
+                        _serviceSection = (SharePointServiceSection)ConfigurationManager.GetSection("titSharePointSSOMServices");
+
+                        if (_serviceSection != null)
                         {
-                            List<Type> exportedTypes;
-
-                            if (service.FilterType == FilterType.AssemblyName)
+                            foreach (ServiceRegistry service in _serviceSection.Services)
                             {
-                                if (string.IsNullOrEmpty(service.AssemblyName))
-                                    throw new Exception("AssemblyName not defined");
+                                List<Type> exportedTypes;
 
-                                // load the services defined in the referenced assembly
-                                exportedTypes = Assembly.Load(service.AssemblyName)
-                                    .ExportedTypes.Where(i => i.BaseType != null && i.BaseType.Name == "ServiceBase")
-                                    .ToList();
-
-                                AddIfNotExistsExportedTypes(exportedTypes);
-
-                            }
-                            else
-                            {
-                                if (!hasLoadedTypes)
+                                if (service.FilterType == FilterType.AssemblyName)
                                 {
-                                    // load the services defined in the current assembly
-                                    exportedTypes = AppDomain.CurrentDomain.GetAssemblies()
-                                                                        .SelectMany(t => t.GetTypes())
-                                                                        .Where(t => t.IsClass && t.IsPublic && t.Namespace == service.Namespace).ToList();
+                                    if (string.IsNullOrEmpty(service.AssemblyName))
+                                        throw new Exception("AssemblyName not defined");
 
+                                    // load the services defined in the referenced assembly
+                                    exportedTypes = Assembly.Load(service.AssemblyName)
+                                        .ExportedTypes.Where(i => i.BaseType != null && i.BaseType.Name == "ServiceBase")
+                                        .ToList();
+
+                                    // load types
                                     AddIfNotExistsExportedTypes(exportedTypes);
+                                }
+                                else
+                                {
+                                    if (!hasLoadedTypes)
+                                    {
+                                        // load the services defined in the current assembly
+                                        exportedTypes = AppDomain.CurrentDomain.GetAssemblies()
+                                                                            .SelectMany(t => t.GetTypes())
+                                                                            .Where(t => t.IsClass && t.IsPublic && t.Namespace == service.Namespace).ToList();
 
-                                    hasLoadedTypes = true;
+                                        // load types
+                                        AddIfNotExistsExportedTypes(exportedTypes);
+
+                                        // mark types as loaded
+                                        hasLoadedTypes = true;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                Logger.Logger.Unexpected("HandlerFactory.constructor", e.Message);
+                catch (Exception e)
+                {
+                    // log error
+                    Logger.Logger.Unexpected("HandlerFactory.constructor", e.Message);
 
-                ResponseJSON(HttpContext.Current.Response, e);
+                    // return error message
+                    ResponseJSON(HttpContext.Current.Response, e);
+                }
             }
         }
 
@@ -94,35 +103,31 @@ namespace TITcs.SharePoint.SSOM.Services
         {
             try
             {
-                //if (_serviceSection.EnableCrossDomain)
-                //{
-                //    if (context.Request.UrlReferrer == null)
-                //        throw new Exception("Invalid Cross Domain");
-
-                //    var urlReferrer = string.Format("{0}://{1}", context.Request.UrlReferrer.Scheme,
-                //        context.Request.UrlReferrer.Authority);
-                //}
-
+                // get service name
                 var className = Path.GetFileNameWithoutExtension(context.Request.PhysicalPath);
 
+                // log execution
                 Logger.Logger.Information("HandlerFactory.GetHandler", string.Format("Variable className = {0}", className));
 
+                // is there a service with the provided path?
                 var type = HandlerTypes.SingleOrDefault(i => i.Name.ToLower() == className.ToLower());
-
                 if (type != null)
                 {
+                    // log execution
                     Logger.Logger.Debug("HandlerFactory.GetHandler", string.Format("Instance of {0}", type.Name));
 
                     // TODO: IMPLEMENTAR CROSS DOMAIN POR ASSEMBLY
 
+                    // create service instance to handle request
                     var handler = (IHttpHandler)Activator.CreateInstance(type);
                     return handler;
                 }
 
+                // customize error message
                 var message = string.Format("The service \"{0}{1}\" not defined", className, Path.GetExtension(context.Request.PhysicalPath));
 
+                // if no service is found
                 throw new HttpException(500, message);
-
             }
             catch (Exception ex)
             {
@@ -133,7 +138,7 @@ namespace TITcs.SharePoint.SSOM.Services
 
             return null;
         }
-        private void ResponseJSON(HttpResponse response, Exception e)
+        private static void ResponseJSON(HttpResponse response, Exception e)
         {
             response.Clear();
             response.ContentType = "application/json; charset=utf-8";
