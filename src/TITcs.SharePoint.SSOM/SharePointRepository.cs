@@ -14,6 +14,12 @@ namespace TITcs.SharePoint.SSOM
 {
     public abstract class SharePointRepository<TEntity> : ISharePointRepository<TEntity> where TEntity : SharePointItem
     {
+        #region consts
+
+        private const string FIELD_ID = "Id";
+
+        #endregion
+
         #region properties and fields
 
         /// <summary>
@@ -728,10 +734,10 @@ namespace TITcs.SharePoint.SSOM
         {
             Logger.Logger.Information("SharePointRepository<TEntity>.Update", "List = {0}, Fields = {1}", Title, string.Join(",", fields.ItemDictionary.Select(i => $"{i.Key} = {i.Value}")).ToArray());
 
-            if (!fields.ItemDictionary.ContainsKey("Id"))
+            if (!fields.ItemDictionary.ContainsKey(FIELD_ID))
                 throw new ArgumentException("Can not update the item without the Id field");
 
-            var itemId = fields.ItemDictionary["Id"].ToString();
+            var itemId = fields.ItemDictionary[FIELD_ID].ToString();
 
             Int32 id = 0;
 
@@ -742,27 +748,32 @@ namespace TITcs.SharePoint.SSOM
             {
                 using (_context.Web)
                 {
+                    // get list
                     var list = GetSourceList();
 
-                    bool allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
+                    // force allow unsafe updates
+                    var allowUnsafeUpdates = _context.Web.AllowUnsafeUpdates;
                     _context.Web.AllowUnsafeUpdates = true;
 
+                    // get the item to update
                     var item = list.GetItemById(id);
 
                     foreach (var field in fields.ItemDictionary)
                     {
+                        // get the name passed in the SharePointField attribute
                         var columnName = GetFieldColumn(typeof(TEntity), field.Key);
 
+                        // update data back to field accordingly
                         ValidateFieldItemDictionary(field, item);
-
-                        if (!field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
-                            item[columnName] = field.Value;
                     }
 
+                    // update the associated item
                     item.Update();
 
+                    // execute the action passed
                     afterUpdateAction?.Invoke(item);
 
+                    // reset safe updates
                     _context.Web.AllowUnsafeUpdates = allowUnsafeUpdates;
                 }
 
@@ -900,43 +911,43 @@ namespace TITcs.SharePoint.SSOM
 
         private void ValidateFieldItemDictionary(KeyValuePair<string, object> field, SPListItem listItem)
         {
-            if (field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return;
-            }
+            // do nothing when ID
+            if (field.Key.Equals("Id", StringComparison.InvariantCultureIgnoreCase)) { return; }
 
+            // get the name passed in the SharePointField attribute
             var columnName = GetFieldColumn(typeof(TEntity), field.Key);
 
-            if (field.Value is IEnumerable<Lookup>)
+            // in case the field is a collection of lookups
+            if (field.Value is ICollection<Lookup>)
             {
                 var fieldValues = new SPFieldLookupValueCollection();
-
-                var values = (IEnumerable<Lookup>)field.Value;
-
+                var values = field.Value as ICollection<Lookup>;
                 if (values != null)
                 {
+                    // add all values to field
                     foreach (var keyValuePair in values)
                     {
-                        fieldValues.Add(new SPFieldLookupValue
-                        {
-                            LookupId = keyValuePair.Id
-                        });
+                        fieldValues.Add(new SPFieldLookupValue { LookupId = keyValuePair.Id });
                     }
+
+                    // update field in item
                     listItem[columnName] = fieldValues;
+
                     return;
                 }
             }
 
+            // in case the field is a lookup
             var lookup = field.Value as Lookup;
-
             if (lookup != null)
             {
                 listItem[columnName] = lookup.Id;
                 return;
             }
 
+            // in case the field is a regular field
             listItem[columnName] = field.Value;
-        }        
+        }
         private string GetFieldColumn(Type type, string columnName)
         {
             return type.GetProperties().Single(p => p.Name == columnName).GetCustomAttribute<SharePointFieldAttribute>().Name;
@@ -996,7 +1007,6 @@ namespace TITcs.SharePoint.SSOM
                                 var field = listItem.Fields.GetFieldByInternalName(columnName);
 
                                 var value = TryGetValue(listItem, field);
-
                                 if (value != null)
                                 {
                                     p.SetValue(entity, ValidateValueType(field, value));
@@ -1007,7 +1017,6 @@ namespace TITcs.SharePoint.SSOM
                                 if (columnName.Equals("File"))
                                 {
                                     p.SetValue(entity, ValidateValueTypeFile(listItem.File));
-
                                 }
                             }
                         }
@@ -1292,7 +1301,7 @@ namespace TITcs.SharePoint.SSOM
             }
 
             throw new Exception($"Type \"{field.Type}\" was not implemented.");
-        }        
+        }
         private double ConvertBytesToMegabytes(long bytes)
         {
             return (bytes / 1024f) / 1024f;
