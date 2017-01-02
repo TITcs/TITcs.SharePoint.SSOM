@@ -49,7 +49,7 @@ namespace TITcs.SharePoint.SSOM.Services
 
                                     // load the services defined in the referenced assembly
                                     exportedTypes = Assembly.Load(service.AssemblyName)
-                                        .ExportedTypes.Where(i => i.BaseType != null && i.BaseType.Name == "ServiceBase")
+                                        .ExportedTypes.Where(i => i.GetInterface("IHttpHandler", true) != null)
                                         .ToList();
 
                                     // load types
