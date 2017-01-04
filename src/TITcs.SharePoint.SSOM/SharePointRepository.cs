@@ -626,6 +626,34 @@ namespace TITcs.SharePoint.SSOM
             return result;
         }
 
+        public int Count(string camlQuery = null)
+        {
+            Logger.Logger.Debug("SharePointRepository.Count", "Query = {0}", camlQuery);
+
+            return Call(() =>
+            {
+                using (_context.Web)
+                {
+                    _context.Web.CacheAllSchema = false;
+
+                    var list = GetSourceList();
+
+                    SPQuery query = new SPQuery();
+
+                    if (RowLimit > 0)
+                        query.RowLimit = RowLimit;
+
+                    if (!string.IsNullOrEmpty(camlQuery))
+                        query.Query = camlQuery;
+
+                    var items = list.GetItems(query);
+
+                    return items.Count;
+                }
+            });
+
+        }
+
         /// <summary>
         /// Get all items that match the specified criteria
         /// </summary>
