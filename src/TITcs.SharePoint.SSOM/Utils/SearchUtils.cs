@@ -48,7 +48,7 @@ namespace TITcs.SharePoint.SSOM.Utils
 
                 if (schema.AllManagedProperties.SingleOrDefault(i => i.Name == name) != null)
                 {
-                    Logger.Logger.Debug("SearchUtils.CreateManagedProperty", $"The property \"{name}\" has exists.");
+                    Logger.Logger.Debug("SearchUtils.CreateManagedProperty", $"The property \"{name}\" already exists.");
                     return;
                 }
 
