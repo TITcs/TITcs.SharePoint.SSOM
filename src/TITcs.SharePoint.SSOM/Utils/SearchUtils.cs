@@ -7,6 +7,7 @@ using Microsoft.Office.Server.Search.Administration;
 using Microsoft.Office.Server.Search.Query;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
+using Microsoft.SharePoint.Publishing.Internal;
 
 namespace TITcs.SharePoint.SSOM.Utils
 {
@@ -44,6 +45,12 @@ namespace TITcs.SharePoint.SSOM.Utils
 
                 // Get the schema of our Search Service Application
                 Schema schema = new Schema(application);
+
+                if (schema.AllManagedProperties.SingleOrDefault(i => i.Name == name) != null)
+                {
+                    Logger.Logger.Debug("SearchUtils.CreateManagedProperty", $"The property \"{name}\" has exists.");
+                    return;
+                }
 
                 var categoryName = Enum.GetName(typeof(SearchCategory), searchCategory).Replace("_", " ");
 
