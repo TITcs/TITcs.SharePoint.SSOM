@@ -90,7 +90,8 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
                 Id = userPrincipal.Guid.ToString(),
                 Email = userPrincipal.EmailAddress,
                 Name = userPrincipal.Name,
-                Login = userPrincipal.SamAccountName
+                Login = userPrincipal.SamAccountName,
+                DisplayName = userPrincipal.DisplayName,
             };
 
             if (bindGroups)

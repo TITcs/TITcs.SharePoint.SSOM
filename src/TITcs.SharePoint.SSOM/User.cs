@@ -10,6 +10,8 @@ namespace TITcs.SharePoint.SSOM
     {
         [JsonProperty("name")]
         public string Name { get; set; }
+        [JsonProperty("displayName")]
+        public string DisplayName { get; set; }
         [JsonProperty("id")]
         public string Id { get; set; }
         [JsonProperty("login")]
