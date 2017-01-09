@@ -29,7 +29,7 @@ namespace TITcs.SharePoint.SSOM.Utils
             XML
         }
 
-        public static void CreateManagedProperty(SPSite site, string name, string crawledName, ManagedDataType type,
+        public static ManagedProperty CreateManagedProperty(SPSite site, string name, string crawledName, ManagedDataType type,
             SearchCategory searchCategory = SearchCategory.SharePoint, bool searchable = true, bool refinable = true,
             bool retrievable = true, bool sortable = true, bool hasMultipleValues = false, bool safeForAnonymous = false,
             bool tokenNormalization = false)
@@ -43,7 +43,7 @@ namespace TITcs.SharePoint.SSOM.Utils
             if (schema.AllManagedProperties.SingleOrDefault(i => i.Name == name) != null)
             {
                 Logger.Logger.Debug("SearchUtils.CreateManagedProperty", $"The property \"{name}\" already exists.");
-                return;
+                return null;
             }
 
             var categoryName = Enum.GetName(typeof(SearchCategory), searchCategory).Replace("_", " ");
@@ -85,8 +85,11 @@ namespace TITcs.SharePoint.SSOM.Utils
 
                 // Write the changes back
                 property.Update();
+
+                return property;
             }
 
+            return null;
         }
     }
 }
