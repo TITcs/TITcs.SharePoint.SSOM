@@ -171,6 +171,7 @@
     <Compile Include="Utils\MethodUtils.cs" />
     <Compile Include="Utils\RegistryUtils.cs" />
     <Compile Include="Utils\SearchUtils.cs" />
+    <Compile Include="Utils\UserUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
