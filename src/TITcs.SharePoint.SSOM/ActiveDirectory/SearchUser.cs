@@ -15,7 +15,7 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
             _contexts = contexts;
         }
 
-        public User GetUser(string loginName)
+        public User GetUser(string loginName, bool bindGroups = true)
         {
             foreach (var context in _contexts)
             {
@@ -33,7 +33,7 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
                             {
                                 var userPrincipal1 = (UserPrincipal) principal;
 
-                                var user = bindUser(userPrincipal1);
+                                var user = bindUser(userPrincipal1, bindGroups);
 
                                 return user;
                             }
@@ -83,20 +83,25 @@ namespace TITcs.SharePoint.SSOM.ActiveDirectory
             return null;
         }
 
-        private static User bindUser(UserPrincipal userPrincipal)
+        private static User bindUser(UserPrincipal userPrincipal, bool bindGroups = true)
         {
             var user = new User()
             {
                 Id = userPrincipal.Guid.ToString(),
                 Email = userPrincipal.EmailAddress,
                 Name = userPrincipal.Name,
-                Login = userPrincipal.SamAccountName,
-                Groups = userPrincipal.GetAuthorizationGroups().Select(i => new Group()
+                Login = userPrincipal.SamAccountName
+            };
+
+            if (bindGroups)
+            {
+                user.Groups = userPrincipal.GetAuthorizationGroups().Select(i => new Group()
                 {
                     Name = i.Name,
                     Id = i.Guid.ToString()
-                }).ToArray()
-            };
+                }).ToArray();
+            }
+
             return user;
         }
 
