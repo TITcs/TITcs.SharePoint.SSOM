@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web;
+using System.Web.Configuration;
 using TITcs.SharePoint.SSOM.Config;
 
 namespace TITcs.SharePoint.SSOM.Services
@@ -14,6 +15,8 @@ namespace TITcs.SharePoint.SSOM.Services
     {
         #region fields and properties
 
+        private static readonly IEqualityComparer<Type> _serviceBaseComparer = new ServiceBaseComparer();
+        private static readonly string _configSection = "titSharePointSSOMServices";
         private static readonly object _lock = new object();
         private static readonly List<Type> _handlerTypes = new List<Type>();
         private static SharePointServiceSection _serviceSection;
@@ -33,8 +36,7 @@ namespace TITcs.SharePoint.SSOM.Services
                 {
                     if (_handlerTypes == null || _handlerTypes.Count == 0)
                     {
-                        // get services from web.config
-                        _serviceSection = (SharePointServiceSection)ConfigurationManager.GetSection("titSharePointSSOMServices");
+                        _serviceSection = (SharePointServiceSection)ConfigurationManager.GetSection(_configSection);
 
                         if (_serviceSection != null)
                         {
@@ -90,7 +92,7 @@ namespace TITcs.SharePoint.SSOM.Services
         {
             foreach (var exportedType in exportedTypes)
             {
-                if (!_handlerTypes.Contains(exportedType))
+                if (!_handlerTypes.Contains(exportedType, _serviceBaseComparer))
                     _handlerTypes.Add(exportedType);
             }
         }
@@ -116,11 +118,8 @@ namespace TITcs.SharePoint.SSOM.Services
                     // log execution
                     Logger.Logger.Debug("HandlerFactory.GetHandler", string.Format("Instance of {0}", type.Name));
 
-                    // TODO: IMPLEMENTAR CROSS DOMAIN POR ASSEMBLY
-
                     // create service instance to handle request
-                    var handler = (IHttpHandler)Activator.CreateInstance(type);
-                    return handler;
+                    return (IHttpHandler)Activator.CreateInstance(type);
                 }
 
                 // customize error message
@@ -157,9 +156,25 @@ namespace TITcs.SharePoint.SSOM.Services
         }
         public void ReleaseHandler(IHttpHandler handler)
         {
-
         }
 
         #endregion
     }
+
+    #region IEqualityComparer implementation
+
+    class ServiceBaseComparer : IEqualityComparer<Type>
+    {
+        public bool Equals(Type x, Type y)
+        {
+            return x.FullName == y.FullName;
+        }
+
+        public int GetHashCode(Type obj)
+        {
+            return obj.GetHashCode();
+        }
+    }
+
+    #endregion
 }

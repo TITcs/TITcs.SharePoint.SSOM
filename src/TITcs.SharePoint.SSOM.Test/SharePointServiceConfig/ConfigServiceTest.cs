@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Configuration;
 using TITcs.SharePoint.SSOM.Services;
 
 namespace TITcs.SharePoint.SSOM.Test.SharePointServiceConfig
@@ -13,35 +15,33 @@ namespace TITcs.SharePoint.SSOM.Test.SharePointServiceConfig
     [TestClass]
     public class ConfigServiceTest
     {
+        private static readonly string _sharepointServiceSectionTypeName = "TITcs.SharePoint.SSOM.Services.SharePointServiceSection";
+
+        public Configuration GetConfig()
+        {
+            // var filePath = Path.Combine(Directory.GetParent(Environment.CurrentDirectory).Parent.FullName, @"SharePointServiceConfig", @"App.config");
+            Assembly.LoadFrom(@"C:\dev\git\TITcs.SharePoint.SSOM\src\TITcs.SharePoint.SSOM\bin\Debug\TITcs.SharePoint.SSOM.dll");
+            var filePath = @"C:\dev\git\TITcs.SharePoint.SSOM\src\TITcs.SharePoint.SSOM.Test\SharePointServiceConfig\App.config";
+            return ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() {
+                ExeConfigFilename = filePath
+            }, ConfigurationUserLevel.None);
+        }
+
         [TestMethod]
+        [TestCategory("SharePointServiceConfig")]
         public void DeveCarregarOArquivoDeConfiguracao()
         {
-            var filePath = Path.Combine(Directory.GetParent(Environment.CurrentDirectory).Parent.FullName, @"SharePointServiceConfig", @"App.config");
-            var config = ConfigurationManager.OpenExeConfiguration(filePath);
+            var config = GetConfig();
             Assert.IsNotNull(config);
         }
 
         [TestMethod]
-        public void DeveRetornarAppSettingsDoArquivoDeConfiguracao()
+        [TestCategory("SharePointServiceConfig")]
+        public void DeveCarregarOArquivoDeConfiguracaoERetornarASecaoTipada()
         {
-            var filePath = Path.Combine(Directory.GetParent(Environment.CurrentDirectory).Parent.FullName, @"SharePointServiceConfig", @"App.config");
-            var config = ConfigurationManager.OpenMappedExeConfiguration(new ExeConfigurationFileMap() {
-                ExeConfigFilename = filePath
-            }, ConfigurationUserLevel.None);
-
-            var services = config.AppSettings;
-            Assert.IsNotNull(services);
-        }
-
-        [TestMethod]
-        public void DeveRetornarAsSecoesDoArquivoDeConfiguracao()
-        {
-            var filePath = Path.Combine(Directory.GetParent(Environment.CurrentDirectory).Parent.FullName, @"SharePointServiceConfig", @"App.config");
-            var fileMap = new ExeConfigurationFileMap() { ExeConfigFilename = filePath };
-            var config = ConfigurationManager.OpenMappedExeConfiguration(fileMap, ConfigurationUserLevel.None, true);
-
-            var services = (SharePointServiceSection) ConfigurationManager.GetSection("sharePointService");
-            Assert.IsNotNull(services);
+            var config = GetConfig();
+            var serviceSection = (SharePointServiceSection)config.Sections.Cast<ConfigurationSection>().FirstOrDefault(c => c.SectionInformation.Type == _sharepointServiceSectionTypeName);
+            Assert.IsNotNull(serviceSection);
         }
     }
 }

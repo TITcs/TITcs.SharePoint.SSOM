@@ -13,7 +13,7 @@ namespace TITcs.SharePoint.SSOM.Config
         #region constructors
 
         public ServiceRegistrations()
-        {
+        {  
         }
 
         #endregion
