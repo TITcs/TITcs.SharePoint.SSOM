@@ -6,6 +6,8 @@ using System.Net.Mail;
 using System.Net.Mime;
 using Microsoft.SharePoint;
 using Microsoft.SharePoint.Administration;
+using Microsoft.SharePoint.Utilities;
+using System.Collections.Specialized;
 
 namespace TITcs.SharePoint.SSOM.Utils
 {
@@ -80,11 +82,59 @@ namespace TITcs.SharePoint.SSOM.Utils
             }
             catch (Exception e)
             {
-                Logger.Logger.Debug("MailUtils.Send.Error", e.Message);
+                Logger.Logger.Unexpected("MailUtils.Send.Error", e);
                 return false;
             }
         }
 
+        public static bool SendEmailWihtSPUtility(string to, string subject, string body)
+        {
+            var result = false;
+
+            try
+            {
+                using (SPWeb web = SPContext.Current.Web)
+                {
+                    result = SPUtility.SendEmail(web, true, false, to, subject, body);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Logger.Unexpected("MailUtils.SendEmailWihtSPUtility", ex);
+            }
+
+            return result;
+        }
+
+        public static bool SendEmailWithSPUtility(string from, string to, string subject, string body)
+        {
+            var result = false;
+
+            try
+            {
+                using (SPWeb web = SPContext.Current.Web)
+                {
+                    StringDictionary headers = new StringDictionary();
+
+                    headers.Add("to", to);
+
+                    headers.Add("from", from);
+
+                    headers.Add("subject", subject);
+
+                    headers.Add("content-type", "text/html");
+
+                    result = SPUtility.SendEmail(web, headers, body);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Logger.Unexpected("MailUtils.SendEmailWihtSPUtility", ex);
+            }
+
+            return result;
+
+        }
         #endregion Send
 
         #region GetAttachment
