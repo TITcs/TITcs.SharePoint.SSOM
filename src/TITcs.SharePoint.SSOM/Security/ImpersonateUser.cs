@@ -33,6 +33,16 @@ namespace TITcs.SharePoint.SSOM.Security
                 }
             });
         }
+        //TODO: VALIDAR COM O NATHAN
+        public static void RunWithElevatedPrivileges(Action action)
+        {
+            SPSecurity.RunWithElevatedPrivileges(delegate ()
+            {
+                if (action == null) throw new ArgumentNullException("action");
+                action();
+
+            });
+        }
 
         public static void RunWithElevatedPrivilegesAndAccountSystem(HttpRequest request, Action<SPWeb> action)
         {
