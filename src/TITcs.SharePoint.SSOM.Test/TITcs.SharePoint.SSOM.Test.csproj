@@ -78,6 +78,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="GetAllFromFolderTest.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="MelhoresPraticasComentariosRepository.cs" />
     <Compile Include="MelhoresPraticasNotificacaoItem.cs" />
@@ -96,15 +97,15 @@
     <Compile Include="SitePagesRespository.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+    <None Include="SharePointServiceConfig\App.config" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\TITcs.SharePoint.SSOM\TITcs.SharePoint.SSOM.csproj">
       <Project>{abd9a716-03ce-41a6-8879-c3cc13396a96}</Project>
       <Name>TITcs.SharePoint.SSOM</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
-    <None Include="SharePointServiceConfig\App.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

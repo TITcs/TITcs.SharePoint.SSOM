@@ -591,6 +591,73 @@ namespace TITcs.SharePoint.SSOM
         }
 
         /// <summary>
+        /// Get all items from an specified folder that match the specified criteria
+        /// </summary>
+        /// <param name="folder">Folder relative to list root. For example: if the folder is Lists/Orders/US, the parameter should be US</param>
+        /// <param name="camlQuery">Search criteria in CAML format starting from the <Where> clause</param>
+        /// <returns>Returns paged list of domain objects</returns>
+        public SharePointPagedData<TEntity> GetAllFromFolderWithQuery(string folder, string camlQuery)
+        {
+            Logger.Logger.Debug("SharePointRepository.GetAllFromFolderWithQuery", "Folder = {0}, CamlQuery = {1}", folder, camlQuery);
+
+            SharePointPagedData<TEntity> result = Call(() =>
+            {
+                using (_context.Web)
+                {
+                    // disable schema caching
+                    _context.Web.CacheAllSchema = false;
+
+                    // access source list
+                    var list = GetSourceList();
+
+                    // build all items query
+                    var spQuery = new SPQuery();
+                    var spFolder = FindFolder(folder);
+                    if (spFolder != null)
+                    {
+                        spQuery.Folder = spFolder;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(camlQuery))
+                        spQuery.Query = camlQuery;
+
+                    // execute all items query
+                    var items = list.GetItems(spQuery);
+                    var originalItems = items;
+
+                    // set new row limit to the total of items
+                    RowLimit = (uint)items.Count;
+
+                    if (spFolder != null)
+                    {
+                        spQuery = new SPQuery()
+                        {
+                            RowLimit = RowLimit,
+                            Folder = spFolder
+                        };
+                    }
+                    else
+                    {
+                        spQuery = new SPQuery()
+                        {
+                            RowLimit = RowLimit
+                        };
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(camlQuery))
+                        spQuery.Query = camlQuery;
+
+                    // execute actual query
+                    items = list.GetItems(spQuery);
+
+                    return new SharePointPagedData<TEntity>(originalItems, PopulateItems(items), string.Empty, RowLimit);
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
         /// Get all items that match the specified criteria
         /// </summary>
         /// <param name="camlQuery">Search criteria in CAML format starting from the <Where> clause</param>
@@ -626,6 +693,11 @@ namespace TITcs.SharePoint.SSOM
             return result;
         }
 
+        /// <summary>
+        /// Returns the count of items that match the specified criteria
+        /// </summary>
+        /// <param name="camlQuery">Search criteria in CAML format starting from the <Where> clause</param>
+        /// <returns>Returns list of domain objects</returns>
         public int Count(string camlQuery = null)
         {
             Logger.Logger.Debug("SharePointRepository.Count", "Query = {0}", camlQuery);
